@@ -2,19 +2,21 @@ function checkFlight() {
   let flight = document.getElementById("flightNo").value.toUpperCase();
   let resultDiv = document.getElementById("result");
 
-  if(!flight) {
+  if (!flight) {
     resultDiv.innerText = "Please enter a flight number.";
     return;
   }
 
-  // Example: Using AviationStack free API
-  let apiKey = "16c28e140421277a4de87f1c182e31d6"; // replace with your free API key from aviationstack.com
-  let url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flight}`;
+  // Your AviationStack API key
+  let apiKey = "22874e1a15c5530668869c9c44b7f337";
+
+  // Use a free CORS proxy for HTTPS (necessary for GitHub Pages)
+  let url = `https://cors-anywhere.herokuapp.com/http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flight}`;
 
   fetch(url)
     .then(response => response.json())
     .then(data => {
-      if(data.data && data.data.length > 0) {
+      if (data.data && data.data.length > 0) {
         let flightData = data.data[0];
         resultDiv.innerHTML = `
           <b>Airline:</b> ${flightData.airline.name} <br>
