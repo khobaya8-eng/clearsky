@@ -5,23 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClearSky Flight Monitor</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .tabs { display: flex; justify-content: center; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; background: #007bff; color: #fff; margin: 0 5px; cursor: pointer; border-radius: 5px; }
+    .tab.active { background: #0056b3; }
+    #searchContainer { text-align: center; margin-bottom: 20px; }
+    #searchInput { padding: 8px; width: 250px; }
+    button { padding: 8px 12px; margin-left: 5px; cursor: pointer; }
+    #result { background: #fff; padding: 20px; border-radius: 5px; min-height: 200px; }
+  </style>
 </head>
 <body>
 
-  <h1>ClearSky Flight Monitor</h1>
+<h1>ClearSky Flight Monitor</h1>
 
-  <!-- Search box -->
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="setAirport('NBO')">Nairobi (JKIA)</div>
+  <div class="tab" onclick="setAirport('DXB')">Dubai (DXB)</div>
+  <div class="tab" onclick="setAirport('DOH')">Doha (DOH)</div>
+</div>
+
+<!-- Search -->
+<div id="searchContainer">
   <input type="text" id="searchInput" placeholder="Enter flight number or country">
   <button onclick="searchFlights()">Search</button>
+  <button onclick="loadFlights()">Show All Flights</button>
+</div>
 
-  <!-- Show all live flights -->
-  <button onclick="loadFlights()">Show All Live Flights</button>
+<!-- Results -->
+<div id="result"></div>
 
-  <!-- Results will appear here -->
-  <div id="result"></div>
-
-  <!-- Link to your JavaScript -->
-  <script src="app.js"></script>
-
+<script src="app.js"></script>
 </body>
 </html>
