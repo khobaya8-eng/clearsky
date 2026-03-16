@@ -1,36 +1,31 @@
 async function loadFlights() {
+  let result = document.getElementById("result");
 
-let result = document.getElementById("result");
+  // Show loading message
+  result.innerHTML = "Loading flights...";
 
-result.innerHTML = "Loading flights...";
+  try {
+    // Fetch from OpenSky using CORS proxy
+    let response = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
+    let data = await response.json();
 
-try {
+    // Show only the first 10 flights (for demo)
+    let flights = data.states.slice(0, 10);
 
-let response = await fetch("https://opensky-network.org/api/states/all");
-let data = await response.json();
+    let html = "<h3>Live Flights</h3>";
 
-let flights = data.states.slice(0,10);
+    flights.forEach(flight => {
+      html += `
+        <b>Callsign:</b> ${flight[1]} <br>
+        <b>Country:</b> ${flight[2]} <br>
+        <b>Altitude:</b> ${flight[7]} meters <br><br>
+      `;
+    });
 
-let html = "<h3>Live Flights</h3>";
+    result.innerHTML = html;
 
-flights.forEach(flight => {
-
-html += `
-Flight: ${flight[1]} <br>
-Country: ${flight[2]} <br>
-Altitude: ${flight[7]} meters <br><br>
-`;
-
-});
-
-result.innerHTML = html;
-
-}
-
-catch(error){
-
-result.innerHTML = "Error loading flight data.";
-
-}
-
+  } catch (error) {
+    console.error(error);
+    result.innerHTML = "Error loading flight data. Try again later.";
+  }
 }
