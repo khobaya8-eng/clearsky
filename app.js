@@ -1,3 +1,22 @@
+let selectedAirport = "NBO"; // Default airport
+
+// Map airport codes to callsign prefixes (free way to filter flights)
+const airportPrefixes = {
+  "NBO": ["KQ"],  // Kenya Airways
+  "DXB": ["EK"],  // Emirates
+  "DOH": ["QR"]   // Qatar Airways
+};
+
+function setAirport(code) {
+  selectedAirport = code;
+
+  // Highlight active tab
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  event.target.classList.add("active");
+
+  loadFlights();
+}
+
 async function loadFlights() {
   let result = document.getElementById("result");
   result.innerHTML = "Loading flights...";
@@ -6,9 +25,18 @@ async function loadFlights() {
     let response = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
     let data = await response.json();
 
-    let flights = data.states.slice(0, 50); // first 50 flights
+    // Filter flights by airport prefix
+    let flights = data.states.filter(flight => {
+      let callsign = flight[0] || "";
+      return airportPrefixes[selectedAirport].some(prefix => callsign.startsWith(prefix));
+    }).slice(0, 50);
 
-    let html = "<h3>Live Flights</h3>";
+    if (flights.length === 0) {
+      result.innerHTML = "No flights found for this airport.";
+      return;
+    }
+
+    let html = `<h3>Flights for ${selectedAirport}</h3>`;
     flights.forEach(flight => {
       html += `
         <b>Callsign:</b> ${flight[0] || "N/A"} <br>
@@ -21,7 +49,7 @@ async function loadFlights() {
 
   } catch (error) {
     console.error(error);
-    result.innerHTML = "Error loading flight data. Try again later.";
+    result.innerHTML = "Error loading flight data.";
   }
 }
 
@@ -40,19 +68,20 @@ async function searchFlights() {
     let response = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
     let data = await response.json();
 
-    // Filter flights by callsign (flight[0]) or country (flight[2])
+    // Filter flights by callsign, country, AND airport prefix
     let flights = data.states.filter(flight => {
       let callsign = (flight[0] || "").toUpperCase();
       let country = (flight[2] || "").toUpperCase();
-      return callsign.includes(input) || country.includes(input);
+      let airportMatch = airportPrefixes[selectedAirport].some(prefix => callsign.startsWith(prefix));
+      return airportMatch && (callsign.includes(input) || country.includes(input));
     });
 
     if (flights.length === 0) {
-      result.innerHTML = `No flights found for "${input}"`;
+      result.innerHTML = `No flights found for "${input}" at ${selectedAirport}.`;
       return;
     }
 
-    let html = `<h3>Search Results for "${input}"</h3>`;
+    let html = `<h3>Search Results for "${input}" at ${selectedAirport}</h3>`;
     flights.forEach(flight => {
       html += `
         <b>Callsign:</b> ${flight[0] || "N/A"} <br>
@@ -68,3 +97,6 @@ async function searchFlights() {
     result.innerHTML = "Error searching flight data.";
   }
 }
+
+// Load default airport flights on page load
+window.onload = loadFlights;
