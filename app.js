@@ -8,7 +8,7 @@ function checkFlight() {
   }
 
   // Example: Using AviationStack free API
-  let apiKey = "YOUR_API_KEY"; // replace with your free API key from aviationstack.com
+  let apiKey = "16c28e140421277a4de87f1c182e31d6"; // replace with your free API key from aviationstack.com
   let url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flight}`;
 
   fetch(url)
