@@ -1,19 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>ClearSky Flight Monitor</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-
 <body>
+  <h1>ClearSky Flight Monitor</h1>
 
-<h1>ClearSky Flight Monitor</h1>
+  <!-- Search box -->
+  <input type="text" id="searchInput" placeholder="Enter flight number or airport code">
+  <button onclick="searchFlights()">Search</button>
 
-<button onclick="loadFlights()">Show Live Flights</button>
+  <!-- Show all live flights -->
+  <button onclick="loadFlights()">Show All Live Flights</button>
 
-<div id="result"></div>
+  <!-- Results will appear here -->
+  <div id="result"></div>
 
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
-</html>
