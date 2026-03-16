@@ -1,38 +1,30 @@
-function checkFlight() {
-  let flight = document.getElementById("flightNo").value.toUpperCase();
-  let resultDiv = document.getElementById("result");
+async function loadFlights() {
 
-  if (!flight) {
-    resultDiv.innerText = "Please enter a flight number.";
-    return;
-  }
+let result = document.getElementById("result");
 
-  // Your AviationStack API key
-  let apiKey = "22874e1a15c5530668869c9c44b7f337";
+try {
 
-  // Use a free CORS proxy for HTTPS (necessary for GitHub Pages)
-  let url = `https://cors-anywhere.herokuapp.com/http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flight}`;
+let response = await fetch("https://opensky-network.org/api/states/all");
+let data = await response.json();
 
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.data && data.data.length > 0) {
-        let flightData = data.data[0];
-        resultDiv.innerHTML = `
-          <b>Airline:</b> ${flightData.airline.name} <br>
-          <b>Flight:</b> ${flightData.flight.iata} <br>
-          <b>From:</b> ${flightData.departure.airport} <br>
-          <b>To:</b> ${flightData.arrival.airport} <br>
-          <b>Status:</b> ${flightData.flight_status} <br>
-          <b>Departure Time:</b> ${flightData.departure.scheduled} <br>
-          <b>Arrival Time:</b> ${flightData.arrival.scheduled} <br>
-        `;
-      } else {
-        resultDiv.innerText = "Flight not found or no data available.";
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      resultDiv.innerText = "Error fetching flight data.";
-    });
+let flights = data.states.slice(0,10); // show first 10 flights
+
+let html = "<h3>Live Flights</h3>";
+
+flights.forEach(flight => {
+html += `
+Flight: ${flight[1]} <br>
+Country: ${flight[2]} <br>
+Altitude: ${flight[7]} meters <br><br>
+`;
+});
+
+result.innerHTML = html;
+
+} catch(error) {
+
+result.innerHTML = "Error loading flight data.";
+
+}
+
 }
