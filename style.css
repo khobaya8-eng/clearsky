@@ -1,21 +1,77 @@
 body {
   font-family: Arial, sans-serif;
+  background: #e6f4ff;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #87ceeb;
+  padding: 20px;
   text-align: center;
-  padding: 50px;
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin: 15px;
+}
+
+.tab {
+  padding: 10px 20px;
+  margin: 5px;
+  background: #5dade2;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2e86c1;
+}
+
+.search-box {
+  text-align: center;
+  margin: 20px;
 }
 
 input {
   padding: 10px;
-  width: 200px;
+  width: 260px;
 }
 
 button {
-  padding: 10px 20px;
-  margin-left: 10px;
+  padding: 10px;
+  margin-left: 5px;
   cursor: pointer;
 }
 
-#result {
-  margin-top: 20px;
-  font-size: 18px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin: 20px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+#advisory {
+  background: #fff3cd;
+  margin: 20px;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+textarea {
+  width: 100%;
+  height: 80px;
+  margin-top: 5px;
 }
