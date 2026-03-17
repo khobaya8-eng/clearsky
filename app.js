@@ -1,6 +1,7 @@
 let selectedAirport = "NBO";
+const apiKey = "trk_f8a1ee3fa2641f4bb33be0c956d51711";
 
-// Map airport codes to flight prefixes & locations
+// Airport codes -> flight prefixes and coordinates
 const airportPrefixes = {
   "NBO": {prefix: ["KQ"], coords:[-1.286389,36.817223]},
   "DXB": {prefix: ["EK"], coords:[25.2532,55.3657]},
@@ -17,7 +18,6 @@ function setAirport(code, el){
   selectedAirport = code;
   document.querySelectorAll(".tab").forEach(tab=>tab.classList.remove("active"));
   el.classList.add("active");
-
   map.setView(airportPrefixes[selectedAirport].coords,5);
   loadFlights();
 }
@@ -65,24 +65,33 @@ function searchFlights(){
   loadFlights();
 }
 
-// Travel Advisory
-function saveAdvisory(){
-  let text = document.getElementById("advisoryInput").value;
-  let level = document.getElementById("riskLevel").value;
-  let advisory = `${level}: ${text}`;
-  localStorage.setItem("advisory",advisory);
-  document.getElementById("savedAdvisory").innerText=advisory;
+// Fetch live travel advisories from TravelRisk API
+async function loadGccAdvisories(){
+  const gccCodes = ["ARE","QAT","SAU","BHR","OMN","KWT"];
+  let advisoryBox = document.getElementById("savedAdvisory");
+  advisoryBox.innerHTML = "Loading travel advisories...";
+
+  let updates = [];
+  for(let code of gccCodes){
+    try{
+      let res = await fetch(`https://api.travelriskapi.com/v1/countries/${code}`,{
+        headers: {"X-API-Key": apiKey}
+      });
+      let data = await res.json();
+      updates.push(`🇨🇦 ${data.name} — Level ${data.advisory_level}: ${data.advisory_description}`);
+    } catch(err){
+      console.error(err);
+      updates.push(`${code}: Unable to load advisory`);
+    }
+  }
+
+  advisoryBox.innerHTML = updates.join("<br>");
 }
 
-function loadAdvisories(){
-  let saved = localStorage.getItem("advisory");
-  document.getElementById("savedAdvisory").innerText=saved?saved:"No current advisory.";
-}
-
-// Auto refresh
+// Auto refresh every 60s
 setInterval(loadFlights,60000);
 
 window.onload = function(){
   loadFlights();
-  loadAdvisories();
+  loadGccAdvisories();
 };
