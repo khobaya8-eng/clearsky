@@ -22,35 +22,69 @@ function setAirport(code, el){
   loadFlights();
 }
 
-// Simulated flight board
+// Load flights
 async function loadFlights(){
   let result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
 
   try {
-    const routes = ["NBO-DXB","DXB-DOH","DOH-AUH","AUH-NBO"];
-    const statuses = ["ON TIME","DELAYED","CANCELLED"];
-    let flights=[];
+    let flights = [];
 
-    for(let i=0;i<15;i++){
-      let route = routes[Math.floor(Math.random()*routes.length)];
-      let status = statuses[Math.floor(Math.random()*statuses.length)];
-      let color = status==="CANCELLED"?"red":(status==="DELAYED"?"orange":"green");
-      flights.push({callsign: airportPrefixes[selectedAirport].prefix[0]+(100+i), route, status, color});
+    if(selectedAirport === "NBO"){
+      // Fetch departures from NBO using OpenSky API
+      const now = Math.floor(Date.now()/1000);
+      const twelveHoursAgo = now - 3600*12; // last 12 hours
+      const response = await fetch(
+        `https://opensky-network.org/api/flights/departure?airport=HKJK&begin=${twelveHoursAgo}&end=${now}`
+      );
+      flights = await response.json();
+
+      if(flights.length === 0){
+        result.innerHTML = "No departures found at NBO in the last 12 hours.";
+        return;
+      }
+
+      let html = `<h3>🛫 Departures - NBO</h3><div class="grid">`;
+      flights.forEach(f=>{
+        let callsign = f.callsign || "N/A";
+        let route = f.estArrivalAirport ? `${f.estDepartureAirport}-${f.estArrivalAirport}` : f.estDepartureAirport+"-Unknown";
+        let status = "Scheduled";
+        html += `
+          <div class="card" style="border-left:5px solid green">
+            <h4>✈ ${callsign}</h4>
+            <p><b>Route:</b> ${route}</p>
+            <p style="color:green"><b>${status}</b></p>
+          </div>
+        `;
+      });
+      html += "</div>";
+      result.innerHTML = html;
+
+    } else {
+      // Simulated flights for DXB, DOH, AUH
+      const routes = ["DXB-DOH","DOH-AUH","AUH-NBO"];
+      const statuses = ["ON TIME","DELAYED","CANCELLED"];
+      for(let i=0;i<15;i++){
+        let route = routes[Math.floor(Math.random()*routes.length)];
+        let status = statuses[Math.floor(Math.random()*statuses.length)];
+        let color = status==="CANCELLED"?"red":(status==="DELAYED"?"orange":"green");
+        flights.push({callsign: airportPrefixes[selectedAirport].prefix[0]+(100+i), route, status, color});
+      }
+
+      let html=`<h3>🛫 Flights - ${selectedAirport}</h3><div class="grid">`;
+      flights.forEach(f=>{
+        html+=`
+          <div class="card" style="border-left:5px solid ${f.color}">
+            <h4>✈ ${f.callsign}</h4>
+            <p><b>Route:</b> ${f.route}</p>
+            <p style="color:${f.color}"><b>${f.status}</b></p>
+          </div>
+        `;
+      });
+      html+="</div>";
+      result.innerHTML=html;
     }
 
-    let html=`<h3>🛫 Flights - ${selectedAirport}</h3><div class="grid">`;
-    flights.forEach(f=>{
-      html+=`
-        <div class="card" style="border-left:5px solid ${f.color}">
-          <h4>✈ ${f.callsign}</h4>
-          <p><b>Route:</b> ${f.route}</p>
-          <p style="color:${f.color}"><b>${f.status}</b></p>
-        </div>
-      `;
-    });
-    html+="</div>";
-    result.innerHTML=html;
   } catch(e){
     console.error(e);
     result.innerHTML="Error loading flights.";
@@ -65,7 +99,7 @@ function searchFlights(){
   loadFlights();
 }
 
-// Fetch live travel advisories from TravelRisk API
+// Fetch GCC travel advisories
 async function loadGccAdvisories(){
   const gccCodes = ["ARE","QAT","SAU","BHR","OMN","KWT"];
   let advisoryBox = document.getElementById("savedAdvisory");
