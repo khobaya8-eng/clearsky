@@ -1,17 +1,36 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #e6f4ff;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to bottom, #87ceeb 0%, #e6f4ff 100%);
   margin: 0;
   padding: 0;
 }
 
 header {
-  background: #87ceeb;
-  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  background: #5dade2;
+  padding: 25px;
   text-align: center;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: bold;
   color: white;
+}
+
+header::after {
+  content: '☁️ ☁️ ☁️';
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 24px;
+  animation: clouds 60s linear infinite;
+  opacity: 0.2;
+}
+
+@keyframes clouds {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .tabs {
@@ -27,11 +46,11 @@ header {
   color: white;
   border-radius: 6px;
   cursor: pointer;
+  transition: 0.3s;
 }
 
-.tab.active {
-  background: #2e86c1;
-}
+.tab:hover { transform: scale(1.1); }
+.tab.active { background: #2e86c1; }
 
 .search-box {
   text-align: center;
@@ -47,6 +66,28 @@ button {
   padding: 10px;
   margin-left: 5px;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #2e86c1;
+  color: white;
+  transform: scale(1.05);
+}
+
+.advisory-box {
+  background: rgba(255,255,255,0.8);
+  padding: 10px 20px;
+  margin: 10px auto;
+  width: 90%;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.advisories p {
+  display: inline-block;
+  margin-right: 15px;
 }
 
 .grid {
@@ -62,8 +103,15 @@ button {
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   border-left: 5px solid green;
+  transition: 0.3s;
 }
+
+.card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
 
 .status-green { border-left-color: green; }
 .status-orange { border-left-color: orange; }
 .status-red { border-left-color: red; }
+
+.status-green::before { content: "✅ "; }
+.status-orange::before { content: "⏰ "; }
+.status-red::before { content: "❌ "; }
