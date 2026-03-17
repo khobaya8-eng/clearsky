@@ -1,22 +1,35 @@
 let selectedAirport = "NBO";
 const aviationKey = "22874e1a15c5530668869c9c44b7f337";
+let flights = []; // for instant search
 
-// Switch airport tabs
+// Initialize map
+let map = L.map('map').setView([1.2921, 36.8219], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const airportCoords = {
+  NBO: [1.2921, 36.8219],
+  DXB: [25.2532, 55.3657],
+  DOH: [25.2736, 51.6080],
+  AUH: [24.4333, 54.6510]
+};
+
 function setAirport(code, el){
   selectedAirport = code;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   el.classList.add("active");
   loadFlights();
+  map.setView(airportCoords[code], 5);
 }
 
-// Load flights from AviationStack + OpenSky fallback
+// Load flights
 async function loadFlights(){
   const result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
+  flights = [];
 
-  let flights = [];
-
-  // Step 1: AviationStack
+  // AviationStack API
   try{
     let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
     let res = await fetch(url);
@@ -28,57 +41,46 @@ async function loadFlights(){
         to: f.arrival.iata || "Unknown",
         status: f.flight_status || "Scheduled",
         color: f.flight_status.toLowerCase().includes("cancel")?"red":
-               f.flight_status.toLowerCase().includes("delay")?"orange":"green"
+               f.flight_status.toLowerCase().includes("delay")?"orange":"green",
+        lat: f.departure.latitude || airportCoords[selectedAirport][0],
+        lon: f.departure.longitude || airportCoords[selectedAirport][1]
       }));
     }
-  }catch(err){ console.error("AviationStack error:", err); }
+  }catch(err){ console.error(err); }
 
-  // Step 2: OpenSky fallback for NBO if too few flights
-  if(selectedAirport==="NBO" && flights.length < 50){
-    try{
-      let osRes = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
-      let osData = await osRes.json();
-      if(osData.states){
-        let nboFlights = osData.states
-          .filter(f => f[2]==="Kenya") // approximate NBO
-          .map(f => ({
-            callsign: f[1] || "N/A",
-            from: "NBO",
-            to: "Unknown",
-            status: "Scheduled",
-            color: "green"
-          }));
-        flights = flights.concat(nboFlights);
-      }
-    }catch(err){ console.error("OpenSky error:", err); }
-  }
+  displayFlights(flights);
+}
 
-  if(flights.length===0){
-    result.innerHTML = "No flights found for " + selectedAirport;
-    return;
-  }
+// Display flights + map markers
+function displayFlights(data){
+  const result = document.getElementById("result");
+  result.innerHTML = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid"></div>`;
+  const grid = result.querySelector(".grid");
 
-  // Display flights
-  let html = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid">`;
-  flights.forEach(f=>{
-    html += `
-      <div class="card status-${f.color}">
-        <h4>✈ ${f.callsign}</h4>
-        <p><b>Route:</b> ${f.from}-${f.to}</p>
-        <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
-      </div>
+  map.eachLayer(layer => { if(layer instanceof L.Marker) map.removeLayer(layer); });
+
+  data.forEach(f=>{
+    let card = document.createElement("div");
+    card.className = `card status-${f.color}`;
+    card.innerHTML = `
+      <h4>✈ ${f.callsign}</h4>
+      <p><b>Route:</b> ${f.from}-${f.to}</p>
+      <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
     `;
+    grid.appendChild(card);
+
+    L.marker([f.lat, f.lon]).addTo(map)
+      .bindPopup(`✈ ${f.callsign}<br>Route: ${f.from}-${f.to}<br>Status: ${f.status}`);
   });
-  html += "</div>";
-  result.innerHTML = html;
 }
 
-// Search flights (filter after fetching)
-function searchFlights(){
-  const input = document.getElementById("searchInput").value.trim().toUpperCase();
-  if(!input){loadFlights(); return;}
-  loadFlights();
-}
+// Instant search
+document.getElementById("searchInput").addEventListener("input", function(){
+  let query = this.value.trim().toUpperCase();
+  if(!query){ displayFlights(flights); return; }
+  let filtered = flights.filter(f => f.callsign.includes(query) || f.to.includes(query) || f.from.includes(query));
+  displayFlights(filtered);
+});
 
-// Load default flights on page load
+// Load default on page load
 window.onload = loadFlights;
