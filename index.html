@@ -19,7 +19,7 @@
 </div>
 
 <div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search NBO, DXB, DOH, AUH or flight">
+  <input type="text" id="searchInput" placeholder="Search flight or airport (NBO, DXB, DOH, AUH)">
   <button onclick="searchFlights()">Search</button>
   <button onclick="loadFlights()">Refresh</button>
 </div>
@@ -30,14 +30,7 @@
 
 <div id="advisory">
   <h3>Travel Advisory (GCC)</h3>
-  <select id="riskLevel">
-    <option value="Safe">🟢 Safe</option>
-    <option value="Warning">🟡 Warning</option>
-    <option value="High Risk">🔴 High Risk</option>
-  </select>
-  <textarea id="advisoryInput" placeholder="Enter travel advisory..."></textarea>
-  <button onclick="saveAdvisory()">Save</button>
-  <p id="savedAdvisory"></p>
+  <p id="savedAdvisory">Loading advisories...</p>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
