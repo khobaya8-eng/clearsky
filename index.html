@@ -1,39 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClearSky Flight Monitor</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClearSky Flight Monitor</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS for map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 </head>
 <body>
 
-<header>✈️ ClearSky</header>
+  <header>✈️ ClearSky</header>
 
-<div class="tabs">
-  <div class="tab active" onclick="setAirport('NBO', this)">Nairobi</div>
-  <div class="tab" onclick="setAirport('DXB', this)">Dubai</div>
-  <div class="tab" onclick="setAirport('DOH', this)">Doha</div>
-  <div class="tab" onclick="setAirport('AUH', this)">Abu Dhabi</div>
-</div>
-
-<div class="advisory-box">
-  <h4>🛂 GCC Travel Advisories</h4>
-  <div class="advisories" id="advisories">
-    <p style="color:red">Saudi Arabia: Flight delays expected due to regional tensions</p>
-    <p style="color:orange">UAE: Increased security checks at airports</p>
-    <p style="color:green">Qatar: Normal operations</p>
+  <div class="tabs">
+    <div class="tab active" onclick="setAirport('NBO', this)">Nairobi</div>
+    <div class="tab" onclick="setAirport('DXB', this)">Dubai</div>
+    <div class="tab" onclick="setAirport('DOH', this)">Doha</div>
+    <div class="tab" onclick="setAirport('AUH', this)">Abu Dhabi</div>
   </div>
-</div>
 
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search flight number or airline code">
-  <button onclick="searchFlights()">Search</button>
-  <button onclick="loadFlights()">Refresh</button>
-</div>
+  <div class="advisory-box">
+    <h4>🛂 GCC Travel Advisories</h4>
+    <div class="advisories" id="advisories">
+      <p style="color:red">Saudi Arabia: Flight delays expected</p>
+      <p style="color:orange">UAE: Increased security checks</p>
+      <p style="color:green">Qatar: Normal operations</p>
+    </div>
+  </div>
 
-<div id="result">Loading flights...</div>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search flight number or airline code">
+  </div>
 
-<script src="app.js"></script>
+  <div id="result">Loading flights...</div>
+
+  <h3 style="text-align:center;">🗺 Flight Map</h3>
+  <div id="map"></div>
+
+  <div class="chat-box">
+    <a href="https://wa.me/254702858487" target="_blank">
+      💬 Chat with ClearSky Support
+    </a>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
