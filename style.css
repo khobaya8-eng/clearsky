@@ -75,3 +75,10 @@ textarea {
   height: 80px;
   margin-top: 5px;
 }
+
+#map {
+  height: 400px;
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 10px;
+}
