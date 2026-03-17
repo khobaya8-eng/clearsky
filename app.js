@@ -1,9 +1,6 @@
 let selectedAirport = "NBO";
 const aviationKey = "22874e1a15c5530668869c9c44b7f337";
 
-// Airlines for Nairobi international departures
-const intlAirlines = ["KQ","EK","QR","EY","FZ"];
-
 // Switch airport tabs
 function setAirport(code, el){
   selectedAirport = code;
@@ -12,61 +9,79 @@ function setAirport(code, el){
   loadFlights();
 }
 
-// Load flights from AviationStack
+// Load flights from AviationStack + OpenSky fallback
 async function loadFlights(){
   const result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
 
+  let flights = [];
+
+  // --- Step 1: Fetch AviationStack departures ---
   try{
-    let flights = [];
     let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
     let res = await fetch(url);
     let data = await res.json();
-
     if(data.data){
-      // Filter for NBO international airlines only if NBO
-      flights = data.data
-        .filter(f => selectedAirport !== "NBO" || intlAirlines.includes(f.flight.iata?.slice(0,2)))
-        .map(f => ({
-          callsign: f.flight.iata || "N/A",
-          from: f.departure.iata || selectedAirport,
-          to: f.arrival.iata || "Unknown",
-          status: f.flight_status || "Scheduled",
-          color: f.flight_status.toLowerCase().includes("cancel")?"red":
-                 f.flight_status.toLowerCase().includes("delay")?"orange":"green"
-        }));
+      flights = data.data.map(f => ({
+        callsign: f.flight.iata || "N/A",
+        from: f.departure.iata || selectedAirport,
+        to: f.arrival.iata || "Unknown",
+        status: f.flight_status || "Scheduled",
+        color: f.flight_status.toLowerCase().includes("cancel")?"red":
+               f.flight_status.toLowerCase().includes("delay")?"orange":"green"
+      }));
     }
-
-    if(flights.length===0){
-      result.innerHTML = "No flights found for " + selectedAirport;
-      return;
-    }
-
-    // Display flights
-    let html = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid">`;
-    flights.forEach(f=>{
-      html += `
-        <div class="card status-${f.color}">
-          <h4>✈ ${f.callsign}</h4>
-          <p><b>Route:</b> ${f.from}-${f.to}</p>
-          <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
-        </div>
-      `;
-    });
-    html += "</div>";
-    result.innerHTML = html;
-
-  }catch(err){
-    console.error(err);
-    result.innerHTML = "Error loading flights.";
+  } catch(err){
+    console.error("AviationStack fetch error:", err);
   }
+
+  // --- Step 2: Fallback OpenSky API for NBO if empty ---
+  if(selectedAirport==="NBO" && flights.length < 50){
+    try{
+      let osRes = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
+      let osData = await osRes.json();
+      if(osData.states){
+        let nboFlights = osData.states
+          .filter(f => f[2]==="Kenya")  // filter Kenya departures approx
+          .map(f => ({
+            callsign: f[1] || "N/A",
+            from: "NBO",
+            to: "Unknown",
+            status: "Scheduled",
+            color: "green"
+          }));
+        flights = flights.concat(nboFlights);
+      }
+    } catch(err){
+      console.error("OpenSky fetch error:", err);
+    }
+  }
+
+  if(flights.length===0){
+    result.innerHTML = "No flights found for " + selectedAirport;
+    return;
+  }
+
+  // Display flights
+  let html = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid">`;
+  flights.forEach(f=>{
+    html += `
+      <div class="card status-${f.color}">
+        <h4>✈ ${f.callsign}</h4>
+        <p><b>Route:</b> ${f.from}-${f.to}</p>
+        <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
+      </div>
+    `;
+  });
+  html += "</div>";
+  result.innerHTML = html;
 }
 
-// Search flights
+// Search flights (filter after fetching)
 function searchFlights(){
   const input = document.getElementById("searchInput").value.trim().toUpperCase();
   if(!input){loadFlights(); return;}
-  loadFlights(); // Could enhance search to filter results after fetching
+  loadFlights(); // can enhance by filtering flights array after fetching
 }
 
 // Load default flights on page load
