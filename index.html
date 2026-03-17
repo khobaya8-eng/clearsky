@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ClearSky Flight Monitor</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
@@ -25,6 +26,8 @@
 
 <div id="result">Loading flights...</div>
 
+<div id="map"></div>
+
 <div id="advisory">
   <h3>Travel Advisory (GCC)</h3>
   <select id="riskLevel">
@@ -37,6 +40,7 @@
   <p id="savedAdvisory"></p>
 </div>
 
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
