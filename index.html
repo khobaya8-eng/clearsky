@@ -1,43 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClearSky Flight Monitor</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    .tabs { display: flex; justify-content: center; margin-bottom: 20px; }
-    .tab { padding: 10px 20px; background: #007bff; color: #fff; margin: 0 5px; cursor: pointer; border-radius: 5px; }
-    .tab.active { background: #0056b3; }
-    #searchContainer { text-align: center; margin-bottom: 20px; }
-    #searchInput { padding: 8px; width: 250px; }
-    button { padding: 8px 12px; margin-left: 5px; cursor: pointer; }
-    #result { background: #fff; padding: 20px; border-radius: 5px; min-height: 200px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ClearSky</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #e6f4ff;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #87ceeb;
+  padding: 20px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin: 15px;
+}
+
+.tab {
+  padding: 10px 20px;
+  margin: 5px;
+  background: #5dade2;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2e86c1;
+}
+
+.search-box {
+  text-align: center;
+  margin: 20px;
+}
+
+input {
+  padding: 10px;
+  width: 250px;
+}
+
+button {
+  padding: 10px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+#result {
+  background: white;
+  margin: 20px;
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 200px;
+}
+
+#advisory {
+  background: #fff3cd;
+  margin: 20px;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+textarea {
+  width: 100%;
+  height: 80px;
+}
+
+</style>
 </head>
+
 <body>
 
-<h1>ClearSky Flight Monitor</h1>
+<header>☁️ ClearSky</header>
 
-<!-- Tabs -->
 <div class="tabs">
-  <div class="tab active" onclick="setAirport('NBO')">Nairobi (JKIA)</div>
-  <div class="tab" onclick="setAirport('DXB')">Dubai (DXB)</div>
-  <div class="tab" onclick="setAirport('DOH')">Doha (DOH)</div>
+  <div class="tab active" onclick="setAirport('NBO')">Nairobi</div>
+  <div class="tab" onclick="setAirport('DXB')">Dubai</div>
+  <div class="tab" onclick="setAirport('DOH')">Doha</div>
+  <div class="tab" onclick="setAirport('AUH')">Abu Dhabi</div>
 </div>
 
-<!-- Search -->
-<div id="searchContainer">
-  <input type="text" id="searchInput" placeholder="Enter flight number or country">
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Search NBO, DXB, DOH, AUH or flight">
   <button onclick="searchFlights()">Search</button>
-  <button onclick="loadFlights()">Show All Flights</button>
+  <button onclick="loadFlights()">Refresh Flights</button>
 </div>
 
-<!-- Results -->
-<div id="result"></div>
+<div id="result">Loading flights...</div>
+
+<div id="advisory">
+  <h3>Travel Advisory (GCC Region)</h3>
+  <textarea id="advisoryInput" placeholder="Enter travel advisory updates..."></textarea>
+  <button onclick="saveAdvisory()">Save Advisory</button>
+  <p id="savedAdvisory"></p>
+</div>
 
 <script src="app.js"></script>
+
 </body>
 </html>
