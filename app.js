@@ -1,7 +1,7 @@
 let selectedAirport = "NBO";
 const aviationKey = "22874e1a15c5530668869c9c44b7f337"; // Your AviationStack key
 
-// Airport coordinates
+// Airport coordinates for map
 const airportCoords = {
   "NBO":[-1.286389,36.817223],
   "DXB":[25.2532,55.3657],
@@ -22,46 +22,29 @@ function setAirport(code, el){
   loadFlights();
 }
 
-// Load flights combining AviationStack (scheduled) + OpenSky (live positions)
+// Load departures from AviationStack
 async function loadFlights(){
   const result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
 
   try {
     let flights = [];
+    let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
+    let res = await fetch(url);
+    let data = await res.json();
 
-    // 1️⃣ Fetch scheduled departures from AviationStack
-    let avUrl = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
-    let avRes = await fetch(avUrl);
-    let avData = await avRes.json();
-    if(avData.data) flights = avData.data.map(f=>({
-      callsign: f.flight.iata || "N/A",
-      from: f.departure.iata || selectedAirport,
-      to: f.arrival.iata || "Unknown",
-      status: f.flight_status || "Scheduled",
-      color: f.flight_status.toLowerCase().includes("cancel")?"red":
-             f.flight_status.toLowerCase().includes("delay")?"orange":"green"
-    }));
-
-    // 2️⃣ Fetch live positions from OpenSky (positions only)
-    let osRes = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
-    let osData = await osRes.json();
-    if(osData.states){
-      osData.states.forEach(s=>{
-        // Filter departures from selected airport
-        if(s[2] && s[2].toUpperCase()===selectedAirport){
-          flights.push({
-            callsign: s[1] || "N/A",
-            from: selectedAirport,
-            to: s[3] || "Unknown",
-            status: "Airborne",
-            color: "blue"
-          });
-        }
-      });
+    if(data.data){
+      flights = data.data.map(f=>({
+        callsign: f.flight.iata || "N/A",
+        from: f.departure.iata || selectedAirport,
+        to: f.arrival.iata || "Unknown",
+        status: f.flight_status || "Scheduled",
+        color: f.flight_status.toLowerCase().includes("cancel")?"red":
+               f.flight_status.toLowerCase().includes("delay")?"orange":"green"
+      }));
     }
 
-    if(flights.length===0){
+    if(flights.length === 0){
       result.innerHTML = "No flights found for " + selectedAirport;
       return;
     }
@@ -95,26 +78,10 @@ function searchFlights(){
   loadFlights();
 }
 
-// GCC Travel Advisories (TravelRisk API)
+// GCC Travel Advisories placeholder
 async function loadGccAdvisories(){
-  const gccCodes = ["ARE","QAT","SAU","BHR","OMN","KWT"];
-  let advisoryBox = document.getElementById("savedAdvisory");
-  advisoryBox.innerHTML = "Loading travel advisories...";
-
-  let updates = [];
-  for(let code of gccCodes){
-    try{
-      let res = await fetch(`https://api.travelriskapi.com/v1/countries/${code}`,{
-        headers: {"X-API-Key": aviationKey}
-      });
-      let data = await res.json();
-      updates.push(`${data.name} — Level ${data.advisory_level}: ${data.advisory_description}`);
-    } catch(e){
-      console.error(e);
-      updates.push(`${code}: Unable to load advisory`);
-    }
-  }
-  advisoryBox.innerHTML = updates.join("<br>");
+  const advisoryBox = document.getElementById("savedAdvisory");
+  advisoryBox.innerHTML = "No advisory data available yet.";
 }
 
 // Auto-refresh every 60 seconds
