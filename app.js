@@ -1,55 +1,63 @@
-let selectedAirport = "NBO"; // Default airport
+let selectedAirport = "NBO";
 
-// Map airport codes to callsign prefixes (free way to filter flights)
 const airportPrefixes = {
-  "NBO": ["KQ"],  // Kenya Airways
-  "DXB": ["EK"],  // Emirates
-  "DOH": ["QR"]   // Qatar Airways
+  "NBO": ["KQ"],
+  "DXB": ["EK"],
+  "DOH": ["QR"],
+  "AUH": ["EY"]
 };
 
-function setAirport(code) {
+function setAirport(code, el) {
   selectedAirport = code;
 
-  // Highlight active tab
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
-  event.target.classList.add("active");
+  el.classList.add("active");
 
   loadFlights();
 }
+
+// ✅ CLEAN API (NO CORS PROXY)
+const API_URL = "https://opensky-network.org/api/states/all";
 
 async function loadFlights() {
   let result = document.getElementById("result");
   result.innerHTML = "Loading flights...";
 
   try {
-    let response = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
+    let response = await fetch(API_URL);
     let data = await response.json();
 
-    // Filter flights by airport prefix
     let flights = data.states.filter(flight => {
-      let callsign = flight[0] || "";
+      let callsign = (flight[0] || "").trim();
       return airportPrefixes[selectedAirport].some(prefix => callsign.startsWith(prefix));
-    }).slice(0, 50);
+    }).slice(0, 20);
 
     if (flights.length === 0) {
-      result.innerHTML = "No flights found for this airport.";
+      result.innerHTML = "No flights found.";
       return;
     }
 
-    let html = `<h3>Flights for ${selectedAirport}</h3>`;
+    let html = `<h3>${selectedAirport} Flights</h3><div class="grid">`;
+
     flights.forEach(flight => {
+      let status = flight[7] > 0 ? "In Air" : "On Ground";
+
       html += `
-        <b>Callsign:</b> ${flight[0] || "N/A"} <br>
-        <b>Country:</b> ${flight[2] || "N/A"} <br>
-        <b>Altitude:</b> ${flight[7] || "N/A"} meters <br><br>
+        <div class="card">
+          <h4>✈ ${flight[0] || "N/A"}</h4>
+          <p><b>Country:</b> ${flight[2]}</p>
+          <p><b>Status:</b> ${status}</p>
+          <p><b>Altitude:</b> ${flight[7] || "0"} m</p>
+        </div>
       `;
     });
 
+    html += "</div>";
     result.innerHTML = html;
 
   } catch (error) {
     console.error(error);
-    result.innerHTML = "Error loading flight data.";
+    result.innerHTML = "Error loading flights.";
   }
 }
 
@@ -58,45 +66,97 @@ async function searchFlights() {
   let result = document.getElementById("result");
 
   if (!input) {
-    result.innerHTML = "Please enter a flight number or country.";
+    result.innerHTML = "Enter airport code or flight.";
+    return;
+  }
+
+  if (["NBO","DXB","DOH","AUH"].includes(input)) {
+    selectedAirport = input;
+    loadFlights();
     return;
   }
 
   result.innerHTML = "Searching...";
 
   try {
-    let response = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
+    let response = await fetch(API_URL);
     let data = await response.json();
 
-    // Filter flights by callsign, country, AND airport prefix
     let flights = data.states.filter(flight => {
       let callsign = (flight[0] || "").toUpperCase();
-      let country = (flight[2] || "").toUpperCase();
-      let airportMatch = airportPrefixes[selectedAirport].some(prefix => callsign.startsWith(prefix));
-      return airportMatch && (callsign.includes(input) || country.includes(input));
-    });
+      return callsign.includes(input);
+    }).slice(0, 20);
 
     if (flights.length === 0) {
-      result.innerHTML = `No flights found for "${input}" at ${selectedAirport}.`;
+      result.innerHTML = "No flights found.";
       return;
     }
 
-    let html = `<h3>Search Results for "${input}" at ${selectedAirport}</h3>`;
+    let html = `<h3>Search Results</h3><div class="grid">`;
+
     flights.forEach(flight => {
       html += `
-        <b>Callsign:</b> ${flight[0] || "N/A"} <br>
-        <b>Country:</b> ${flight[2] || "N/A"} <br>
-        <b>Altitude:</b> ${flight[7] || "N/A"} meters <br><br>
+        <div class="card">
+          <h4>✈ ${flight[0]}</h4>
+          <p><b>Country:</b> ${flight[2]}</p>
+          <p><b>Altitude:</b> ${flight[7]}</p>
+        </div>
       `;
     });
 
+    html += "</div>";
     result.innerHTML = html;
 
   } catch (error) {
-    console.error(error);
-    result.innerHTML = "Error searching flight data.";
+    result.innerHTML = "Error searching flights.";
   }
 }
 
-// Load default airport flights on page load
-window.onload = loadFlights;
+/* MAP */
+let map = L.map('map').setView([20, 0], 2);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+  .addTo(map);
+
+async function loadMapFlights() {
+  try {
+    let response = await fetch(API_URL);
+    let data = await response.json();
+
+    data.states.slice(0, 40).forEach(flight => {
+      let lat = flight[6];
+      let lon = flight[5];
+
+      if (lat && lon) {
+        L.marker([lat, lon])
+          .addTo(map)
+          .bindPopup(`✈ ${flight[0]}`);
+      }
+    });
+
+  } catch (error) {
+    console.log("Map error");
+  }
+}
+
+/* ADVISORY */
+function saveAdvisory() {
+  let text = document.getElementById("advisoryInput").value;
+  let level = document.getElementById("riskLevel").value;
+
+  let advisory = `${level}: ${text}`;
+  localStorage.setItem("advisory", advisory);
+
+  document.getElementById("savedAdvisory").innerText = advisory;
+}
+
+/* LOAD */
+window.onload = function() {
+  loadFlights();
+  loadMapFlights();
+
+  let saved = localStorage.getItem("advisory");
+  if (saved) {
+    document.getElementById("savedAdvisory").innerText = saved;
+  }
+};
