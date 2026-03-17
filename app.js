@@ -16,7 +16,7 @@ async function loadFlights(){
 
   let flights = [];
 
-  // --- Step 1: Fetch AviationStack departures ---
+  // Step 1: AviationStack
   try{
     let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
     let res = await fetch(url);
@@ -31,18 +31,16 @@ async function loadFlights(){
                f.flight_status.toLowerCase().includes("delay")?"orange":"green"
       }));
     }
-  } catch(err){
-    console.error("AviationStack fetch error:", err);
-  }
+  }catch(err){ console.error("AviationStack error:", err); }
 
-  // --- Step 2: Fallback OpenSky API for NBO if empty ---
+  // Step 2: OpenSky fallback for NBO if too few flights
   if(selectedAirport==="NBO" && flights.length < 50){
     try{
       let osRes = await fetch("https://cors-anywhere.herokuapp.com/https://opensky-network.org/api/states/all");
       let osData = await osRes.json();
       if(osData.states){
         let nboFlights = osData.states
-          .filter(f => f[2]==="Kenya")  // filter Kenya departures approx
+          .filter(f => f[2]==="Kenya") // approximate NBO
           .map(f => ({
             callsign: f[1] || "N/A",
             from: "NBO",
@@ -52,9 +50,7 @@ async function loadFlights(){
           }));
         flights = flights.concat(nboFlights);
       }
-    } catch(err){
-      console.error("OpenSky fetch error:", err);
-    }
+    }catch(err){ console.error("OpenSky error:", err); }
   }
 
   if(flights.length===0){
@@ -81,7 +77,7 @@ async function loadFlights(){
 function searchFlights(){
   const input = document.getElementById("searchInput").value.trim().toUpperCase();
   if(!input){loadFlights(); return;}
-  loadFlights(); // can enhance by filtering flights array after fetching
+  loadFlights();
 }
 
 // Load default flights on page load
