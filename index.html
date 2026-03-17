@@ -3,97 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClearSky</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<style>
-body {
-  font-family: Arial;
-  background: #e6f4ff;
-  margin: 0;
-}
-
-header {
-  background: #87ceeb;
-  padding: 20px;
-  text-align: center;
-  font-size: 30px;
-  font-weight: bold;
-}
-
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin: 15px;
-}
-
-.tab {
-  padding: 10px 20px;
-  margin: 5px;
-  background: #5dade2;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.tab.active {
-  background: #2e86c1;
-}
-
-.search-box {
-  text-align: center;
-  margin: 20px;
-}
-
-input {
-  padding: 10px;
-  width: 260px;
-}
-
-button {
-  padding: 10px;
-  margin-left: 5px;
-  cursor: pointer;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
-}
-
-.card {
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-#result {
-  margin: 20px;
-}
-
-#map {
-  height: 400px;
-  margin: 20px;
-  border-radius: 10px;
-}
-
-#advisory {
-  background: #fff3cd;
-  margin: 20px;
-  padding: 15px;
-  border-radius: 10px;
-}
-
-textarea {
-  width: 100%;
-  height: 80px;
-}
-</style>
+<title>ClearSky Flight Monitor</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <header>☁️ ClearSky</header>
@@ -113,9 +25,6 @@ textarea {
 
 <div id="result">Loading flights...</div>
 
-<h3 style="text-align:center;">Live Flight Map</h3>
-<div id="map"></div>
-
 <div id="advisory">
   <h3>Travel Advisory (GCC)</h3>
   <select id="riskLevel">
@@ -123,15 +32,11 @@ textarea {
     <option value="Warning">🟡 Warning</option>
     <option value="High Risk">🔴 High Risk</option>
   </select>
-
   <textarea id="advisoryInput" placeholder="Enter travel advisory..."></textarea>
   <button onclick="saveAdvisory()">Save</button>
-
   <p id="savedAdvisory"></p>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
