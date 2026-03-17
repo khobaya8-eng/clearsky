@@ -1,6 +1,6 @@
 let selectedAirport = "NBO";
 const aviationKey = "22874e1a15c5530668869c9c44b7f337";
-let flights = []; // for instant search
+let flights = []; // store flights for search
 
 // Initialize map
 let map = L.map('map').setView([1.2921, 36.8219], 5);
@@ -29,29 +29,45 @@ async function loadFlights(){
   result.innerHTML = "Loading flight board...";
   flights = [];
 
-  // AviationStack API
   try{
-    let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
-    let res = await fetch(url);
-    let data = await res.json();
-    if(data.data){
-      flights = data.data.map(f => ({
-        callsign: f.flight.iata || "N/A",
-        from: f.departure.iata || selectedAirport,
-        to: f.arrival.iata || "Unknown",
-        status: f.flight_status || "Scheduled",
-        color: f.flight_status.toLowerCase().includes("cancel")?"red":
-               f.flight_status.toLowerCase().includes("delay")?"orange":"green",
-        lat: f.departure.latitude || airportCoords[selectedAirport][0],
-        lon: f.departure.longitude || airportCoords[selectedAirport][1]
+    if(selectedAirport === "NBO"){
+      // OpenSky API for NBO departures
+      let url = `https://opensky-network.org/api/flights/departure?airport=NBO&begin=${Math.floor(Date.now()/1000)-86400}&end=${Math.floor(Date.now()/1000)}`;
+      let res = await fetch(url);
+      let data = await res.json();
+      flights = data.map(f => ({
+        callsign: f.callsign || "N/A",
+        from: f.estDepartureAirport || "NBO",
+        to: f.estArrivalAirport || "Unknown",
+        status: f.estDepartureAirport===f.estArrivalAirport?"Scheduled":"En Route",
+        color: "green",
+        lat: airportCoords.NBO[0],
+        lon: airportCoords.NBO[1]
       }));
+    } else {
+      // AviationStack API for DXB, DOH, AUH
+      let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
+      let res = await fetch(url);
+      let data = await res.json();
+      if(data.data){
+        flights = data.data.map(f => ({
+          callsign: f.flight.iata || "N/A",
+          from: f.departure.iata || selectedAirport,
+          to: f.arrival.iata || "Unknown",
+          status: f.flight_status || "Scheduled",
+          color: f.flight_status.toLowerCase().includes("cancel")?"red":
+                 f.flight_status.toLowerCase().includes("delay")?"orange":"green",
+          lat: f.departure.latitude || airportCoords[selectedAirport][0],
+          lon: f.departure.longitude || airportCoords[selectedAirport][1]
+        }));
+      }
     }
   }catch(err){ console.error(err); }
 
   displayFlights(flights);
 }
 
-// Display flights + map markers
+// Display flights + map
 function displayFlights(data){
   const result = document.getElementById("result");
   result.innerHTML = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid"></div>`;
@@ -82,5 +98,4 @@ document.getElementById("searchInput").addEventListener("input", function(){
   displayFlights(filtered);
 });
 
-// Load default on page load
 window.onload = loadFlights;
