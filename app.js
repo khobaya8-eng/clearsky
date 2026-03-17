@@ -1,24 +1,24 @@
 let selectedAirport = "NBO";
 const apiKey = "trk_f8a1ee3fa2641f4bb33be0c956d51711";
 
-// Airport codes -> flight prefixes and coordinates
-const airportPrefixes = {
-  "NBO": {prefix: ["KQ"], coords:[-1.286389,36.817223]},
-  "DXB": {prefix: ["EK"], coords:[25.2532,55.3657]},
-  "DOH": {prefix: ["QR"], coords:[25.2736,51.6081]},
-  "AUH": {prefix: ["EY"], coords:[24.4333,54.6519]}
+// Airport coordinates
+const airportCoords = {
+  "NBO":[-1.286389,36.817223],
+  "DXB":[25.2532,55.3657],
+  "DOH":[25.2736,51.6081],
+  "AUH":[24.4333,54.6519]
 };
 
 // Initialize Leaflet map
-let map = L.map('map').setView(airportPrefixes[selectedAirport].coords, 5);
+let map = L.map('map').setView(airportCoords[selectedAirport], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
 
-// Switch airport tab
+// Switch airport tabs
 function setAirport(code, el){
   selectedAirport = code;
   document.querySelectorAll(".tab").forEach(tab=>tab.classList.remove("active"));
   el.classList.add("active");
-  map.setView(airportPrefixes[selectedAirport].coords,5);
+  map.setView(airportCoords[selectedAirport],5);
   loadFlights();
 }
 
@@ -31,12 +31,13 @@ async function loadFlights(){
     let flights = [];
 
     if(selectedAirport === "NBO"){
-      // Fetch departures from NBO using OpenSky API
       const now = Math.floor(Date.now()/1000);
-      const twelveHoursAgo = now - 3600*12; // last 12 hours
+      const twelveHoursAgo = now - 3600*12;
+
       const response = await fetch(
         `https://opensky-network.org/api/flights/departure?airport=HKJK&begin=${twelveHoursAgo}&end=${now}`
       );
+
       flights = await response.json();
 
       if(flights.length === 0){
@@ -44,16 +45,18 @@ async function loadFlights(){
         return;
       }
 
-      let html = `<h3>🛫 Departures - NBO</h3><div class="grid">`;
+      let html = `<h3>🛫 Departures - NBO (All Airlines)</h3><div class="grid">`;
       flights.forEach(f=>{
         let callsign = f.callsign || "N/A";
-        let route = f.estArrivalAirport ? `${f.estDepartureAirport}-${f.estArrivalAirport}` : f.estDepartureAirport+"-Unknown";
-        let status = "Scheduled";
+        let route = f.estArrivalAirport ? `${f.estDepartureAirport}-${f.estArrivalAirport}` : `${f.estDepartureAirport}-Unknown`;
+        let status = f.canceled ? "CANCELLED" : "Scheduled";
+        let color = f.canceled ? "red" : "green";
+
         html += `
-          <div class="card" style="border-left:5px solid green">
+          <div class="card" style="border-left:5px solid ${color}">
             <h4>✈ ${callsign}</h4>
             <p><b>Route:</b> ${route}</p>
-            <p style="color:green"><b>${status}</b></p>
+            <p style="color:${color}"><b>${status}</b></p>
           </div>
         `;
       });
@@ -61,14 +64,14 @@ async function loadFlights(){
       result.innerHTML = html;
 
     } else {
-      // Simulated flights for DXB, DOH, AUH
+      // Simulated flights for other airports
       const routes = ["DXB-DOH","DOH-AUH","AUH-NBO"];
       const statuses = ["ON TIME","DELAYED","CANCELLED"];
-      for(let i=0;i<15;i++){
+      for(let i=0;i<20;i++){
         let route = routes[Math.floor(Math.random()*routes.length)];
         let status = statuses[Math.floor(Math.random()*statuses.length)];
         let color = status==="CANCELLED"?"red":(status==="DELAYED"?"orange":"green");
-        flights.push({callsign: airportPrefixes[selectedAirport].prefix[0]+(100+i), route, status, color});
+        flights.push({callsign: selectedAirport+(100+i), route, status, color});
       }
 
       let html=`<h3>🛫 Flights - ${selectedAirport}</h3><div class="grid">`;
@@ -91,7 +94,7 @@ async function loadFlights(){
   }
 }
 
-// Search function
+// Search flights
 function searchFlights(){
   let input = document.getElementById("searchInput").value.trim().toUpperCase();
   if(!input){loadFlights();return;}
@@ -99,7 +102,7 @@ function searchFlights(){
   loadFlights();
 }
 
-// Fetch GCC travel advisories
+// Load GCC travel advisories
 async function loadGccAdvisories(){
   const gccCodes = ["ARE","QAT","SAU","BHR","OMN","KWT"];
   let advisoryBox = document.getElementById("savedAdvisory");
@@ -122,7 +125,7 @@ async function loadGccAdvisories(){
   advisoryBox.innerHTML = updates.join("<br>");
 }
 
-// Auto refresh every 60s
+// Auto-refresh every 60s
 setInterval(loadFlights,60000);
 
 window.onload = function(){
