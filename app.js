@@ -2,6 +2,16 @@ let selectedAirport = "NBO";
 const aviationKey = "22874e1a15c5530668869c9c44b7f337";
 let flights = [];
 
+// 🌍 Airport full names
+const airportNames = {
+  NBO: "Nairobi (JKIA)",
+  DXB: "Dubai International",
+  DOH: "Doha Hamad",
+  AUH: "Abu Dhabi International",
+  IST: "Istanbul Airport",
+  FRA: "Frankfurt Airport"
+};
+
 // 🌍 Map Setup
 let map = L.map('map').setView([1.2921, 36.8219], 5);
 
@@ -35,78 +45,24 @@ async function loadFlights() {
   flights = [];
 
   try {
+    let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
+    let res = await fetch(url);
+    let data = await res.json();
 
-    // ============================
-    // 🇰🇪 NAIROBI (SPECIAL LOGIC)
-    // ============================
-    if (selectedAirport === "NBO") {
-
-      try {
-        // ✅ OpenSky (REAL departures using ICAO HKJK)
-        let url = `https://opensky-network.org/api/flights/departure?airport=HKJK&begin=${Math.floor(Date.now()/1000)-86400}&end=${Math.floor(Date.now()/1000)}`;
-        
-        let res = await fetch(url);
-        let data = await res.json();
-
-        if (data && data.length > 0) {
-          flights = data.map(f => ({
-            callsign: f.callsign ? f.callsign.trim() : "N/A",
-            from: "NBO",
-            to: f.estArrivalAirport || "Unknown",
-            status: "En Route",
-            color: "green",
-            lat: airportCoords.NBO[0],
-            lon: airportCoords.NBO[1]
-          }));
-        } else {
-          throw "No OpenSky data";
-        }
-
-      } catch (err) {
-        console.log("⚠️ OpenSky failed → switching to AviationStack");
-
-        // ✅ FALLBACK: AviationStack
-        let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=NBO`;
-        
-        let res = await fetch(url);
-        let data = await res.json();
-
-        if (data.data && data.data.length > 0) {
-          flights = data.data.map(f => ({
-            callsign: f.flight?.iata || "N/A",
-            from: "NBO",
-            to: f.arrival?.iata || "Unknown",
-            status: f.flight_status || "Scheduled",
-            color: f.flight_status?.toLowerCase().includes("cancel") ? "red" :
-                   f.flight_status?.toLowerCase().includes("delay") ? "orange" : "green",
-            lat: airportCoords.NBO[0],
-            lon: airportCoords.NBO[1]
-          }));
-        }
-      }
-
-    } else {
-
-      // ============================
-      // 🌍 OTHER AIRPORTS (DXB/DOH/AUH)
-      // ============================
-      let url = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`;
-      
-      let res = await fetch(url);
-      let data = await res.json();
-
-      if (data.data && data.data.length > 0) {
-        flights = data.data.map(f => ({
-          callsign: f.flight?.iata || "N/A",
-          from: selectedAirport,
-          to: f.arrival?.iata || "Unknown",
-          status: f.flight_status || "Scheduled",
-          color: f.flight_status?.toLowerCase().includes("cancel") ? "red" :
-                 f.flight_status?.toLowerCase().includes("delay") ? "orange" : "green",
-          lat: airportCoords[selectedAirport][0],
-          lon: airportCoords[selectedAirport][1]
-        }));
-      }
+    if (data.data && data.data.length > 0) {
+      flights = data.data.map(f => ({
+        callsign: f.flight?.iata || "N/A",
+        from: selectedAirport,
+        to: f.arrival?.iata || "Unknown",
+        status: f.flight_status || "Scheduled",
+        color: f.flight_status?.toLowerCase().includes("cancel") ? "red" :
+               f.flight_status?.toLowerCase().includes("delay") ? "orange" : "green",
+        depTime: f.departure?.scheduled ? new Date(f.departure.scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A",
+        arrTime: f.arrival?.scheduled ? new Date(f.arrival.scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A",
+        date: f.departure?.scheduled ? new Date(f.departure.scheduled).toLocaleDateString() : "N/A",
+        lat: airportCoords[selectedAirport][0],
+        lon: airportCoords[selectedAirport][1]
+      }));
     }
 
   } catch (error) {
@@ -118,64 +74,68 @@ async function loadFlights() {
   displayFlights(flights);
 }
 
-// 📊 Display Flights
+// 📊 Display Flights (WITH EXPAND FEATURE)
 function displayFlights(data) {
   const result = document.getElementById("result");
 
   if (!data || data.length === 0) {
-    result.innerHTML = "⚠️ No flights available right now.";
+    result.innerHTML = "⚠️ No flights available.";
     return;
   }
 
-  result.innerHTML = `<h3>🛫 Flights from ${selectedAirport}</h3><div class="grid"></div>`;
+  result.innerHTML = `<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
   const grid = result.querySelector(".grid");
 
-  // Clear map markers
+  // Clear markers
   map.eachLayer(layer => {
     if (layer instanceof L.Marker) map.removeLayer(layer);
   });
 
-  // Add flight cards + markers
-  data.forEach(f => {
+  data.forEach((f, index) => {
 
     let card = document.createElement("div");
     card.className = `card status-${f.color}`;
 
     card.innerHTML = `
       <h4>✈ ${f.callsign}</h4>
-      <p><b>Route:</b> ${f.from} → ${f.to}</p>
+      <p><b>Route:</b> ${airportNames[f.from]} → ${airportNames[f.to] || f.to}</p>
       <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
+
+      <div class="details" id="details-${index}">
+        <p>📅 ${f.date}</p>
+        <p>🕒 ${f.depTime} → ${f.arrTime}</p>
+      </div>
     `;
+
+    card.onclick = () => {
+      let d = document.getElementById(`details-${index}`);
+      d.classList.toggle("show");
+    };
 
     grid.appendChild(card);
 
-    // Map marker
     L.marker([f.lat, f.lon]).addTo(map)
       .bindPopup(`
         ✈ ${f.callsign}<br>
-        Route: ${f.from} → ${f.to}<br>
-        Status: ${f.status}
+        ${airportNames[f.from]} → ${airportNames[f.to] || f.to}<br>
+        ${f.depTime} → ${f.arrTime}
       `);
   });
 }
 
-// 🔍 LIVE SEARCH
+// 🔍 SEARCH
 document.getElementById("searchInput").addEventListener("input", function () {
   let query = this.value.trim().toUpperCase();
 
-  if (!query) {
-    displayFlights(flights);
-    return;
-  }
+  if (!query) return displayFlights(flights);
 
   let filtered = flights.filter(f =>
     f.callsign.includes(query) ||
-    f.to.includes(query) ||
-    f.from.includes(query)
+    f.to.includes(query)
   );
 
   displayFlights(filtered);
 });
 
-// 🚀 LOAD ON START
+// 🚀 LOAD
 window.onload = loadFlights;
