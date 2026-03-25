@@ -7,30 +7,37 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Roboto',sans-serif; background:#0b1426; color:#e6f1ff; margin:0; }
-header { background:#0a1a35; padding:25px; text-align:center; font-size:36px; font-weight:700; font-family:'Orbitron',sans-serif; letter-spacing:1px; color:#00ffcc; text-shadow:0 2px 5px rgba(0,0,0,0.5); }
-.tabs { display:flex; justify-content:center; margin:15px; flex-wrap:wrap; }
-.tab { padding:12px 25px; margin:5px; background:#1a2a4c; color:#e6f1ff; border-radius:8px; cursor:pointer; transition:.3s; font-weight:500; }
-.tab:hover { background:#0f1b35; }
-.tab.active { background:#003366; color:#fff; box-shadow:0 0 12px rgba(0,102,204,0.6); }
-.search-box { text-align:center; margin:20px; }
-.search-box input { padding:12px 15px; width:280px; border-radius:8px; border:none; outline:none; font-size:16px; }
-.advisory-box { background:#0a1a35; padding:15px 25px; margin:10px auto; width:90%; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.4); }
-.advisory-box h4 { margin-top:0; color:#00ffcc; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin:20px; }
-.card { background:#0f203f; padding:18px; border-radius:14px; cursor:pointer; transition:transform .3s, box-shadow .3s; border-left:6px solid #00ff88; }
-.card:hover { transform:scale(1.05); box-shadow:0 0 15px rgba(0,255,204,0.5); }
-.card h4 { margin:0 0 8px 0; font-family:'Orbitron',sans-serif; font-weight:500; }
-.details { max-height:0; overflow:hidden; transition:.4s; color:#bcdcff; margin-top:8px; }
-.details.show { max-height:120px; }
-.status-green { border-left-color:#00ff88; }
-.status-orange { border-left-color:#ffbb33; }
-.status-red { border-left-color:#ff4444; }
-#map { height:450px; width:90%; margin:25px auto; border-radius:14px; border:2px solid #003366; box-shadow:0 0 15px rgba(0,102,204,0.5); }
-.chat-box { text-align:center; margin:25px 0; }
-.chat-box a { background:#003366; color:#00ffcc; padding:14px 25px; border-radius:10px; text-decoration:none; font-weight:500; transition:.3s; }
-.chat-box a:hover { background:#0055aa; box-shadow:0 0 12px rgba(0,102,204,0.6); }
-footer { text-align:center; padding:15px; font-size:14px; color:#aaa; }
+/* ---------- GENERAL ---------- */
+body { font-family: 'Roboto', sans-serif; background: #0b1426; color: #e6f1ff; margin: 0; }
+header { background: #0a1a35; padding: 25px; text-align: center; font-size: 36px; font-weight: 700; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; color: #00ffcc; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+/* ---------- TABS ---------- */
+.tabs { display: flex; justify-content: center; margin: 15px; flex-wrap: wrap; }
+.tab { padding: 12px 25px; margin: 5px; background: #1a2a4c; color: #e6f1ff; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 500; }
+.tab:hover { background: #0f1b35; }
+.tab.active { background: #003366; color: #fff; box-shadow: 0 0 12px rgba(0,102,204,0.6); }
+/* ---------- SEARCH ---------- */
+.search-box { text-align: center; margin: 20px; }
+.search-box input { padding: 12px 15px; width: 280px; border-radius: 8px; border: none; outline: none; font-size: 16px; }
+/* ---------- ADVISORY ---------- */
+.advisory-box { background: #0a1a35; padding: 15px 25px; margin: 10px auto; width: 90%; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.4); }
+.advisory-box h4 { margin-top: 0; color: #00ffcc; }
+/* ---------- FLIGHT GRID ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin: 20px; }
+.card { background: #0f203f; padding: 18px; border-radius: 14px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; border-left: 6px solid #00ff88; }
+.card:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,204,0.5); }
+.card h4 { margin: 0 0 8px 0; font-family: 'Orbitron', sans-serif; font-weight: 500; }
+.details { max-height: 0; overflow: hidden; transition: 0.4s; color: #bcdcff; margin-top: 8px; }
+.details.show { max-height: 140px; }
+/* Status colors */
+.status-green { border-left-color: #00ff88; }
+.status-orange { border-left-color: #ffbb33; }
+.status-red { border-left-color: #ff4444; }
+/* ---------- MAP ---------- */
+#map { height: 450px; width: 90%; margin: 25px auto; border-radius: 14px; border: 2px solid #003366; box-shadow: 0 0 15px rgba(0,102,204,0.5); }
+/* ---------- CHAT BOX ---------- */
+.chat-box { text-align: center; margin: 25px 0; }
+.chat-box a { background: #003366; color: #00ffcc; padding: 14px 25px; border-radius: 10px; text-decoration: none; font-weight: 500; transition: 0.3s; }
+.chat-box a:hover { background: #0055aa; box-shadow: 0 0 12px rgba(0,102,204,0.6); }
 </style>
 </head>
 <body>
@@ -46,7 +53,7 @@ footer { text-align:center; padding:15px; font-size:14px; color:#aaa; }
 
 <div class="advisory-box">
   <h4>🛂 GCC Travel Advisories</h4>
-  <div class="advisories">
+  <div class="advisories" id="advisories">
     <p style="color:red">Saudi Arabia: Flight delays expected</p>
     <p style="color:orange">UAE: Increased security checks</p>
     <p style="color:green">Qatar: Normal operations</p>
@@ -68,109 +75,112 @@ footer { text-align:center; padding:15px; font-size:14px; color:#aaa; }
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-
-// Airport metadata
-const airportNames = {
-  NBO: "Nairobi (JKIA)",
-  DXB: "Dubai International",
-  DOH: "Doha Hamad",
-  AUH: "Abu Dhabi International"
-};
-
-const airportCoords = {
-  NBO: [1.2921,36.8219],
-  DXB: [25.2532,55.3657],
-  DOH: [25.2736,51.6080],
-  AUH: [24.4333,54.6510]
-};
-
 let selectedAirport = "NBO";
-let map = L.map('map').setView([1.2921,36.8219],5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-
+const aviationKey = "22874e1a15c5530668869c9c44b7f337";
 let flights = [];
 
-// Sample static schedules (replace with real airport feed)
-const flightData = {
-  NBO: [
-    { flight:'KQ202', to:'BOM', dep:'2026-03-25T16:45:00+03:00', arr:'2026-03-26T01:30:00+05:30', status:'Scheduled' },
-    { flight:'KQ104', to:'JNB', dep:'2026-03-25T14:30:00+03:00', arr:'2026-03-25T16:30:00+02:00', status:'Scheduled' }
-  ],
-  DXB: [
-    { flight:'EK507', to:'LHR', dep:'2026-03-25T09:00:00+04:00', arr:'2026-03-25T13:00:00+00:00', status:'Scheduled' }
-  ],
-  DOH: [
-    { flight:'QR102', to:'FRA', dep:'2026-03-25T08:00:00+03:00', arr:'2026-03-25T13:00:00+01:00', status:'Scheduled' }
-  ],
-  AUH: [
-    { flight:'EY201', to:'CDG', dep:'2026-03-25T10:00:00+04:00', arr:'2026-03-25T14:30:00+01:00', status:'Scheduled' }
-  ]
-};
+const airportNames = { NBO:"Nairobi (JKIA)", DXB:"Dubai International", DOH:"Doha Hamad", AUH:"Abu Dhabi International" };
+const airportCoords = { NBO:[1.2921,36.8219], DXB:[25.2532,55.3657], DOH:[25.2736,51.6080], AUH:[24.4333,54.6510] };
 
-// Switch tabs
-function setAirport(code, el){
+let map = L.map('map').setView([1.2921,36.8219],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+
+function setAirport(code, el) {
   selectedAirport = code;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
   map.setView(airportCoords[code],5);
   loadFlights();
 }
 
-// Load flights
-function loadFlights(){
-  flights = flightData[selectedAirport].map(f=>{
-    let dep = new Date(f.dep);
-    let arr = new Date(f.arr);
-    let now = new Date();
-    let diffMs = dep - now;
-    let depIn = diffMs>0 ? `${Math.floor(diffMs/3600000)}h ${Math.floor((diffMs%3600000)/60000)}m` : 'Departed';
-    let color = f.status.toLowerCase().includes('cancel') ? 'red' : f.status.toLowerCase().includes('delay') ? 'orange':'green';
-    return { ...f, depTime:dep.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), arrTime:arr.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), date:dep.toLocaleDateString(), depIn, color, lat:airportCoords[selectedAirport][0], lon:airportCoords[selectedAirport][1] };
-  });
+// Helper: merge iFly schedule with AviationStack status
+async function loadFlights() {
+  const result = document.getElementById("result");
+  result.innerHTML = "Loading flight board...";
+  flights = [];
+
+  try {
+    // iFly API: scheduled departures + arrivals
+    let iflyUrl = `https://api.iflyapi.com/v1/flights?airport=${selectedAirport}&type=all&limit=100`; // Replace with actual free iFly endpoint
+    let iflyRes = await fetch(iflyUrl);
+    let iflyData = await iflyRes.json();
+
+    // AviationStack API: live status
+    let stackUrl = `https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}&limit=100`;
+    let stackRes = await fetch(stackUrl);
+    let stackData = await stackRes.json();
+
+    if(iflyData.flights && iflyData.flights.length>0){
+      flights = iflyData.flights.map(f=>{
+        // find status from AviationStack
+        let live = stackData.data.find(s=>s.flight?.iata===f.flight_number) || {};
+        let status = live.flight_status || f.status || "Scheduled";
+        let color = status.toLowerCase().includes("cancel")?"red":status.toLowerCase().includes("delay")?"orange":"green";
+        let depTime = f.departure_time?new Date(f.departure_time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):"N/A";
+        let arrTime = f.arrival_time?new Date(f.arrival_time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):"N/A";
+        let date = f.departure_time?new Date(f.departure_time).toLocaleDateString():"N/A";
+        return {
+          callsign: f.flight_number,
+          from: selectedAirport,
+          to: f.destination,
+          status,
+          color,
+          depTime,
+          arrTime,
+          date,
+          lat: airportCoords[selectedAirport][0],
+          lon: airportCoords[selectedAirport][1]
+        };
+      });
+    }
+  } catch(err){ console.error(err); result.innerHTML="❌ Error loading flights."; return; }
+
   displayFlights(flights);
 }
 
-// Display flights
 function displayFlights(data){
-  const result = document.getElementById('result');
-  if(!data||data.length===0){ result.innerHTML='⚠️ No flights available.'; return;}
+  const result=document.getElementById("result");
+  if(!data || data.length===0){ result.innerHTML="⚠️ No flights available."; return; }
   result.innerHTML=`<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
-  const grid = result.querySelector('.grid');
+  const grid=result.querySelector(".grid");
   map.eachLayer(layer=>{ if(layer instanceof L.Marker) map.removeLayer(layer); });
+
   data.forEach((f,index)=>{
-    let card=document.createElement('div');
+    let card=document.createElement("div");
     card.className=`card status-${f.color}`;
     card.innerHTML=`
-      <h4>✈ ${f.flight}</h4>
-      <p><b>Route:</b> ${airportNames[selectedAirport]} → ${f.to}</p>
+      <h4>✈ ${f.callsign}</h4>
+      <p><b>Route:</b> ${airportNames[f.from]} → ${f.to}</p>
       <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
       <div class="details" id="details-${index}">
         <p>📅 ${f.date}</p>
         <p>🕒 ${f.depTime} → ${f.arrTime}</p>
-        <p>⏳ Departs in: ${f.depIn}</p>
       </div>
     `;
-    card.onclick=()=>document.getElementById(`details-${index}`).classList.toggle('show');
+    card.onclick=()=>{ document.getElementById(`details-${index}`).classList.toggle("show"); };
     grid.appendChild(card);
-    L.marker([f.lat,f.lon]).addTo(map).bindPopup(`✈ ${f.flight}<br>${airportNames[selectedAirport]} → ${f.to}<br>${f.depTime} → ${f.arrTime}<br>Departs in: ${f.depIn}`);
+
+    L.marker([f.lat,f.lon]).addTo(map).bindPopup(`
+      ✈ ${f.callsign}<br>
+      ${airportNames[f.from]} → ${f.to}<br>
+      ${f.depTime} → ${f.arrTime}
+    `);
   });
 }
 
-// Search
-document.getElementById('searchInput').addEventListener('input',function(){
+// SEARCH
+document.getElementById("searchInput").addEventListener("input",function(){
   let query=this.value.trim().toUpperCase();
   if(!query) return displayFlights(flights);
-  let filtered=flights.filter(f=>f.flight.includes(query)||f.to.includes(query));
+  let filtered = flights.filter(f=>f.callsign.includes(query) || f.to.toUpperCase().includes(query));
   displayFlights(filtered);
 });
 
 window.onload=loadFlights;
-
 </script>
 
-<footer>
-© 2026 ClearSky. All rights reserved. Unauthorized use or reproduction is prohibited.
+<footer style="text-align:center; padding:15px; font-size:14px; color:#aaa;">
+  © 2026 ClearSky. All rights reserved. Unauthorized use or reproduction is prohibited.
 </footer>
-
 </body>
 </html>
