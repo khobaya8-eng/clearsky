@@ -6,101 +6,33 @@
 <title>ClearSky Flight Monitor</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-
 <style>
-body {
-  font-family: 'Roboto', sans-serif;
-  background: #0b1426;
-  color: #e6f1ff;
-  margin: 0;
-}
-
-header {
-  background: #0a1a35;
-  padding: 25px;
-  text-align: center;
-  font-size: 36px;
-  font-family: 'Orbitron', sans-serif;
-  color: #00ffcc;
-}
-
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin: 15px;
-  flex-wrap: wrap;
-}
-
-.tab {
-  padding: 12px 25px;
-  margin: 5px;
-  background: #1a2a4c;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.tab.active {
-  background: #003366;
-}
-
-.search-box {
-  text-align: center;
-  margin: 20px;
-}
-
-.search-box input {
-  padding: 12px;
-  width: 280px;
-  border-radius: 8px;
-  border: none;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-  margin: 20px;
-}
-
-.card {
-  background: #0f203f;
-  padding: 18px;
-  border-radius: 14px;
-  cursor: pointer;
-  border-left: 6px solid #00ff88;
-}
-
-.details {
-  max-height: 0;
-  overflow: hidden;
-  transition: 0.4s;
-}
-
-.details.show {
-  max-height: 140px;
-}
-
-.status-green { border-left-color: #00ff88; }
-.status-orange { border-left-color: orange; }
-.status-red { border-left-color: red; }
-
-#map {
-  height: 450px;
-  width: 90%;
-  margin: 25px auto;
-  border-radius: 14px;
-}
-
-footer {
-  text-align:center;
-  padding:15px;
-  font-size:14px;
-  color:#aaa;
-  background:#0a1a35;
-}
+body { font-family:'Roboto',sans-serif; background:#0b1426; color:#e6f1ff; margin:0; }
+header { background:#0a1a35; padding:25px; text-align:center; font-size:36px; font-weight:700; font-family:'Orbitron',sans-serif; letter-spacing:1px; color:#00ffcc; text-shadow:0 2px 5px rgba(0,0,0,0.5); }
+.tabs { display:flex; justify-content:center; margin:15px; flex-wrap:wrap; }
+.tab { padding:12px 25px; margin:5px; background:#1a2a4c; color:#e6f1ff; border-radius:8px; cursor:pointer; transition:.3s; font-weight:500; }
+.tab:hover { background:#0f1b35; }
+.tab.active { background:#003366; color:#fff; box-shadow:0 0 12px rgba(0,102,204,0.6); }
+.search-box { text-align:center; margin:20px; }
+.search-box input { padding:12px 15px; width:280px; border-radius:8px; border:none; outline:none; font-size:16px; }
+.advisory-box { background:#0a1a35; padding:15px 25px; margin:10px auto; width:90%; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.4); }
+.advisory-box h4 { margin-top:0; color:#00ffcc; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin:20px; }
+.card { background:#0f203f; padding:18px; border-radius:14px; cursor:pointer; transition:transform .3s, box-shadow .3s; border-left:6px solid #00ff88; }
+.card:hover { transform:scale(1.05); box-shadow:0 0 15px rgba(0,255,204,0.5); }
+.card h4 { margin:0 0 8px 0; font-family:'Orbitron',sans-serif; font-weight:500; }
+.details { max-height:0; overflow:hidden; transition:.4s; color:#bcdcff; margin-top:8px; }
+.details.show { max-height:120px; }
+.status-green { border-left-color:#00ff88; }
+.status-orange { border-left-color:#ffbb33; }
+.status-red { border-left-color:#ff4444; }
+#map { height:450px; width:90%; margin:25px auto; border-radius:14px; border:2px solid #003366; box-shadow:0 0 15px rgba(0,102,204,0.5); }
+.chat-box { text-align:center; margin:25px 0; }
+.chat-box a { background:#003366; color:#00ffcc; padding:14px 25px; border-radius:10px; text-decoration:none; font-weight:500; transition:.3s; }
+.chat-box a:hover { background:#0055aa; box-shadow:0 0 12px rgba(0,102,204,0.6); }
+footer { text-align:center; padding:15px; font-size:14px; color:#aaa; }
 </style>
 </head>
-
 <body>
 
 <header>✈️ ClearSky</header>
@@ -112,8 +44,17 @@ footer {
   <div class="tab" onclick="setAirport('AUH', this)">Abu Dhabi</div>
 </div>
 
+<div class="advisory-box">
+  <h4>🛂 GCC Travel Advisories</h4>
+  <div class="advisories">
+    <p style="color:red">Saudi Arabia: Flight delays expected</p>
+    <p style="color:orange">UAE: Increased security checks</p>
+    <p style="color:green">Qatar: Normal operations</p>
+  </div>
+</div>
+
 <div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search flight">
+  <input type="text" id="searchInput" placeholder="Search flight number or destination">
 </div>
 
 <div id="result">Loading flights...</div>
@@ -121,15 +62,14 @@ footer {
 <h3 style="text-align:center;">🗺 Flight Map</h3>
 <div id="map"></div>
 
-<footer>© 2026 ClearSky. All rights reserved.</footer>
+<div class="chat-box">
+  <a href="https://wa.me/254702858487" target="_blank">💬 Chat with ClearSky Support</a>
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
-let selectedAirport = "NBO";
-const aviationKey = "22874e1a15c5530668869c9c44b7f337";
-let flights = [];
 
+// Airport metadata
 const airportNames = {
   NBO: "Nairobi (JKIA)",
   DXB: "Dubai International",
@@ -138,142 +78,98 @@ const airportNames = {
 };
 
 const airportCoords = {
-  NBO: [1.2921, 36.8219],
-  DXB: [25.2532, 55.3657],
-  DOH: [25.2736, 51.6080],
-  AUH: [24.4333, 54.6510]
+  NBO: [1.2921,36.8219],
+  DXB: [25.2532,55.3657],
+  DOH: [25.2736,51.6080],
+  AUH: [24.4333,54.6510]
 };
 
-let map = L.map('map').setView(airportCoords.NBO, 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let selectedAirport = "NBO";
+let map = L.map('map').setView([1.2921,36.8219],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
-// Switch airport
-function setAirport(code, el) {
+let flights = [];
+
+// Sample static schedules (replace with real airport feed)
+const flightData = {
+  NBO: [
+    { flight:'KQ202', to:'BOM', dep:'2026-03-25T16:45:00+03:00', arr:'2026-03-26T01:30:00+05:30', status:'Scheduled' },
+    { flight:'KQ104', to:'JNB', dep:'2026-03-25T14:30:00+03:00', arr:'2026-03-25T16:30:00+02:00', status:'Scheduled' }
+  ],
+  DXB: [
+    { flight:'EK507', to:'LHR', dep:'2026-03-25T09:00:00+04:00', arr:'2026-03-25T13:00:00+00:00', status:'Scheduled' }
+  ],
+  DOH: [
+    { flight:'QR102', to:'FRA', dep:'2026-03-25T08:00:00+03:00', arr:'2026-03-25T13:00:00+01:00', status:'Scheduled' }
+  ],
+  AUH: [
+    { flight:'EY201', to:'CDG', dep:'2026-03-25T10:00:00+04:00', arr:'2026-03-25T14:30:00+01:00', status:'Scheduled' }
+  ]
+};
+
+// Switch tabs
+function setAirport(code, el){
   selectedAirport = code;
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  el.classList.add("active");
-  map.setView(airportCoords[code], 5);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  map.setView(airportCoords[code],5);
   loadFlights();
 }
 
-// Countdown
-function getCountdown(time) {
-  let diff = new Date(time) - new Date();
-  if (diff <= 0) return "Departed";
-
-  let mins = Math.floor(diff / 60000);
-  let hrs = Math.floor(mins / 60);
-
-  return hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`;
-}
-
 // Load flights
-async function loadFlights() {
-  const result = document.getElementById("result");
-  result.innerHTML = "Loading...";
-  flights = [];
-
-  try {
-    let res = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`);
-    let data = await res.json();
-
-    flights = data.data.map(f => {
-      let depRaw = f.departure?.estimated || f.departure?.scheduled;
-      let arrRaw = f.arrival?.estimated || f.arrival?.scheduled;
-
-      return {
-        callsign: f.flight?.iata || "N/A",
-        from: selectedAirport,
-        to: f.arrival?.iata || "Unknown",
-
-        status: f.flight_status?.toUpperCase() || "SCHEDULED",
-
-        color:
-          f.flight_status?.includes("cancel") ? "red" :
-          f.flight_status?.includes("delay") ? "orange" : "green",
-
-        depTime: depRaw ? new Date(depRaw).toLocaleTimeString([], {
-          hour:'2-digit',
-          minute:'2-digit',
-          timeZone: f.departure.timezone || "UTC"
-        }) : "N/A",
-
-        arrTime: arrRaw ? new Date(arrRaw).toLocaleTimeString([], {
-          hour:'2-digit',
-          minute:'2-digit',
-          timeZone: f.arrival.timezone || "UTC"
-        }) : "N/A",
-
-        date: depRaw ? new Date(depRaw).toLocaleDateString() : "N/A",
-
-        countdown: depRaw ? getCountdown(depRaw) : "N/A",
-
-        lat: airportCoords[selectedAirport][0],
-        lon: airportCoords[selectedAirport][1]
-      };
-    });
-
-  } catch {
-    result.innerHTML = "❌ Error loading flights.";
-    return;
-  }
-
+function loadFlights(){
+  flights = flightData[selectedAirport].map(f=>{
+    let dep = new Date(f.dep);
+    let arr = new Date(f.arr);
+    let now = new Date();
+    let diffMs = dep - now;
+    let depIn = diffMs>0 ? `${Math.floor(diffMs/3600000)}h ${Math.floor((diffMs%3600000)/60000)}m` : 'Departed';
+    let color = f.status.toLowerCase().includes('cancel') ? 'red' : f.status.toLowerCase().includes('delay') ? 'orange':'green';
+    return { ...f, depTime:dep.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), arrTime:arr.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), date:dep.toLocaleDateString(), depIn, color, lat:airportCoords[selectedAirport][0], lon:airportCoords[selectedAirport][1] };
+  });
   displayFlights(flights);
 }
 
 // Display flights
-function displayFlights(data) {
-  const result = document.getElementById("result");
-
-  if (!data.length) {
-    result.innerHTML = "No flights available.";
-    return;
-  }
-
-  result.innerHTML = `<h3>Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
-  const grid = result.querySelector(".grid");
-
-  map.eachLayer(l => { if (l instanceof L.Marker) map.removeLayer(l); });
-
-  data.forEach((f, i) => {
-    let card = document.createElement("div");
-    card.className = `card status-${f.color}`;
-
-    card.innerHTML = `
-      <h4>✈ ${f.callsign}</h4>
-      <p><b>Route:</b> ${airportNames[f.from]} → ${airportNames[f.to] || f.to}</p>
+function displayFlights(data){
+  const result = document.getElementById('result');
+  if(!data||data.length===0){ result.innerHTML='⚠️ No flights available.'; return;}
+  result.innerHTML=`<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
+  const grid = result.querySelector('.grid');
+  map.eachLayer(layer=>{ if(layer instanceof L.Marker) map.removeLayer(layer); });
+  data.forEach((f,index)=>{
+    let card=document.createElement('div');
+    card.className=`card status-${f.color}`;
+    card.innerHTML=`
+      <h4>✈ ${f.flight}</h4>
+      <p><b>Route:</b> ${airportNames[selectedAirport]} → ${f.to}</p>
       <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
-
-      <div class="details" id="d-${i}">
+      <div class="details" id="details-${index}">
         <p>📅 ${f.date}</p>
         <p>🕒 ${f.depTime} → ${f.arrTime}</p>
-        <p>⏳ Departs in: ${f.countdown}</p>
+        <p>⏳ Departs in: ${f.depIn}</p>
       </div>
     `;
-
-    card.onclick = () => {
-      document.getElementById(`d-${i}`).classList.toggle("show");
-    };
-
+    card.onclick=()=>document.getElementById(`details-${index}`).classList.toggle('show');
     grid.appendChild(card);
-
-    L.marker([f.lat, f.lon]).addTo(map)
-      .bindPopup(`${f.callsign}<br>${f.depTime} → ${f.arrTime}<br>${f.countdown}`);
+    L.marker([f.lat,f.lon]).addTo(map).bindPopup(`✈ ${f.flight}<br>${airportNames[selectedAirport]} → ${f.to}<br>${f.depTime} → ${f.arrTime}<br>Departs in: ${f.depIn}`);
   });
 }
 
 // Search
-document.getElementById("searchInput").addEventListener("input", e => {
-  let q = e.target.value.toUpperCase();
-  displayFlights(flights.filter(f => f.callsign.includes(q) || f.to.includes(q)));
+document.getElementById('searchInput').addEventListener('input',function(){
+  let query=this.value.trim().toUpperCase();
+  if(!query) return displayFlights(flights);
+  let filtered=flights.filter(f=>f.flight.includes(query)||f.to.includes(query));
+  displayFlights(filtered);
 });
 
-// Start
-window.onload = loadFlights;
+window.onload=loadFlights;
+
 </script>
 
-<footer style="text-align:center; padding:15px; font-size:14px; color:#aaa;">
-  © 2026 ClearSky. All rights reserved. Unauthorised use or reproduction is prohibited.
+<footer>
+© 2026 ClearSky. All rights reserved. Unauthorized use or reproduction is prohibited.
 </footer>
 
 </body>
