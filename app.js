@@ -38,6 +38,19 @@ function setAirport(code, el) {
   loadFlights();
 }
 
+// ⏳ Countdown function
+function getCountdown(time) {
+  const now = new Date();
+  const diff = new Date(time) - now;
+
+  if (diff <= 0) return "Departed";
+
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(mins / 60);
+
+  return hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`;
+}
+
 // ✈️ Load Flights
 async function loadFlights() {
   const result = document.getElementById("result");
@@ -50,19 +63,51 @@ async function loadFlights() {
     let data = await res.json();
 
     if (data.data && data.data.length > 0) {
-      flights = data.data.map(f => ({
-        callsign: f.flight?.iata || "N/A",
-        from: selectedAirport,
-        to: f.arrival?.iata || "Unknown",
-        status: f.flight_status || "Scheduled",
-        color: f.flight_status?.toLowerCase().includes("cancel") ? "red" :
-               f.flight_status?.toLowerCase().includes("delay") ? "orange" : "green",
-        depTime: f.departure?.scheduled ? new Date(f.departure.scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A",
-        arrTime: f.arrival?.scheduled ? new Date(f.arrival.scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A",
-        date: f.departure?.scheduled ? new Date(f.departure.scheduled).toLocaleDateString() : "N/A",
-        lat: airportCoords[selectedAirport][0],
-        lon: airportCoords[selectedAirport][1]
-      }));
+      flights = data.data.map(f => {
+
+        const depTimeRaw = f.departure?.estimated || f.departure?.scheduled;
+        const arrTimeRaw = f.arrival?.estimated || f.arrival?.scheduled;
+
+        return {
+          callsign: f.flight?.iata || "N/A",
+          from: selectedAirport,
+          to: f.arrival?.iata || "Unknown",
+
+          status: f.flight_status?.toUpperCase() || "SCHEDULED",
+
+          color:
+            f.flight_status?.includes("cancel") ? "red" :
+            f.flight_status?.includes("delay") ? "orange" :
+            f.flight_status?.includes("active") ? "green" : "green",
+
+          depTime: depTimeRaw
+            ? new Date(depTimeRaw).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: f.departure.timezone || "UTC"
+              })
+            : "N/A",
+
+          arrTime: arrTimeRaw
+            ? new Date(arrTimeRaw).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: f.arrival.timezone || "UTC"
+              })
+            : "N/A",
+
+          date: depTimeRaw
+            ? new Date(depTimeRaw).toLocaleDateString([], {
+                timeZone: f.departure.timezone || "UTC"
+              })
+            : "N/A",
+
+          countdown: depTimeRaw ? getCountdown(depTimeRaw) : "N/A",
+
+          lat: airportCoords[selectedAirport][0],
+          lon: airportCoords[selectedAirport][1]
+        };
+      });
     }
 
   } catch (error) {
@@ -74,7 +119,7 @@ async function loadFlights() {
   displayFlights(flights);
 }
 
-// 📊 Display Flights (WITH EXPAND FEATURE)
+// 📊 Display Flights
 function displayFlights(data) {
   const result = document.getElementById("result");
 
@@ -99,17 +144,22 @@ function displayFlights(data) {
     card.innerHTML = `
       <h4>✈ ${f.callsign}</h4>
       <p><b>Route:</b> ${airportNames[f.from]} → ${airportNames[f.to] || f.to}</p>
-      <p><b>Status:</b> <span style="color:${f.color}">${f.status}</span></p>
+
+      <p><b>Status:</b> 
+        <span style="color:${f.color}; font-weight:bold;">
+          ${f.status}
+        </span>
+      </p>
 
       <div class="details" id="details-${index}">
         <p>📅 ${f.date}</p>
         <p>🕒 ${f.depTime} → ${f.arrTime}</p>
+        <p>⏳ Departs in: ${f.countdown}</p>
       </div>
     `;
 
     card.onclick = () => {
-      let d = document.getElementById(`details-${index}`);
-      d.classList.toggle("show");
+      document.getElementById(`details-${index}`).classList.toggle("show");
     };
 
     grid.appendChild(card);
@@ -118,7 +168,8 @@ function displayFlights(data) {
       .bindPopup(`
         ✈ ${f.callsign}<br>
         ${airportNames[f.from]} → ${airportNames[f.to] || f.to}<br>
-        ${f.depTime} → ${f.arrTime}
+        ${f.depTime} → ${f.arrTime}<br>
+        ⏳ ${f.countdown}
       `);
   });
 }
