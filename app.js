@@ -31,10 +31,8 @@ const airportCoords = {
 // 🔁 Switch Tabs
 function setAirport(code, el) {
   selectedAirport = code;
-
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
-
   map.setView(airportCoords[code], 5);
   loadFlights();
 }
@@ -43,12 +41,9 @@ function setAirport(code, el) {
 function getCountdown(time) {
   const now = new Date();
   const diff = new Date(time) - now;
-
   if (diff <= 0) return "Departed";
-
   const mins = Math.floor(diff / 60000);
   const hrs = Math.floor(mins / 60);
-
   return hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`;
 }
 
@@ -59,7 +54,6 @@ async function loadFlights() {
   flights = [];
 
   try {
-    // fetch from GitHub Pages relative path
     let res = await fetch("./data/flights.json");
     let data = await res.json();
 
@@ -76,22 +70,15 @@ async function loadFlights() {
         callsign: f.flight?.iata || "N/A",
         from: selectedAirport,
         to: f.arrival?.iata || "Unknown",
-
         status: f.flight_status?.toUpperCase() || "SCHEDULED",
-
         color:
           f.flight_status?.includes("cancel") ? "red" :
           f.flight_status?.includes("delay") ? "orange" :
           f.flight_status?.includes("active") ? "green" : "green",
-
         depTime: depTimeRaw ? new Date(depTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.departure.timezone || "UTC" }) : "N/A",
-
         arrTime: arrTimeRaw ? new Date(arrTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.arrival.timezone || "UTC" }) : "N/A",
-
         date: depTimeRaw ? new Date(depTimeRaw).toLocaleDateString([], { timeZone: f.departure.timezone || "UTC" }) : "N/A",
-
         countdown: depTimeRaw ? getCountdown(depTimeRaw) : "N/A",
-
         lat: airportCoords[selectedAirport][0],
         lon: airportCoords[selectedAirport][1]
       };
@@ -118,7 +105,7 @@ function displayFlights(data) {
   result.innerHTML = `<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
   const grid = result.querySelector(".grid");
 
-  // Clear markers
+  // Clear previous markers
   map.eachLayer(layer => {
     if (layer instanceof L.Marker) map.removeLayer(layer);
   });
@@ -130,13 +117,7 @@ function displayFlights(data) {
     card.innerHTML = `
       <h4>✈ ${f.callsign}</h4>
       <p><b>Route:</b> ${airportNames[f.from]} → ${airportNames[f.to] || f.to}</p>
-
-      <p><b>Status:</b> 
-        <span style="color:${f.color}; font-weight:bold;">
-          ${f.status}
-        </span>
-      </p>
-
+      <p><b>Status:</b> <span style="color:${f.color}; font-weight:bold;">${f.status}</span></p>
       <div class="details" id="details-${index}">
         <p>📅 ${f.date}</p>
         <p>🕒 ${f.depTime} → ${f.arrTime}</p>
@@ -163,16 +144,14 @@ function displayFlights(data) {
 // 🔍 SEARCH
 document.getElementById("searchInput").addEventListener("input", function () {
   let query = this.value.trim().toUpperCase();
-
   if (!query) return displayFlights(flights);
 
   let filtered = flights.filter(f =>
-    f.callsign.includes(query) ||
-    f.to.includes(query)
+    f.callsign.includes(query) || f.to.includes(query)
   );
 
   displayFlights(filtered);
 });
 
-// 🚀 LOAD on window load
+// 🚀 LOAD flights on window load
 window.onload = loadFlights;
