@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ClearSky Flight Monitor</title>
+
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
 <style>
 body {
   font-family: 'Roboto', sans-serif;
@@ -70,6 +75,7 @@ header {
 .chat-box a:hover { background: #0055aa; box-shadow: 0 0 12px rgba(0,102,204,0.6); }
 </style>
 </head>
+
 <body>
 
 <header>✈️ ClearSky</header>
@@ -95,6 +101,7 @@ header {
 </div>
 
 <div id="result">Loading flights...</div>
+
 <h3 style="text-align:center;">🗺 Flight Map</h3>
 <div id="map"></div>
 
@@ -102,19 +109,32 @@ header {
   <a href="https://wa.me/254702858487" target="_blank">💬 Chat with ClearSky Support</a>
 </div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
 let selectedAirport = "NBO";
-const aviationKey = "22874e1a15c5530668869c9c44b7f337"; // AviationStack Free API
-const backendURL = "https://your-backend-url.com"; // Replace with your hosted scraper backend
 let flights = [];
 
-const airportNames = { NBO:"Nairobi (JKIA)", DXB:"Dubai International", DOH:"Doha Hamad", AUH:"Abu Dhabi International" };
-const airportCoords = { NBO:[1.2921,36.8219], DXB:[25.2532,55.3657], DOH:[25.2736,51.6080], AUH:[24.4333,54.6510] };
+// Airport full names & coordinates
+const airportNames = { 
+  NBO:"Nairobi (JKIA)", 
+  DXB:"Dubai International", 
+  DOH:"Doha Hamad", 
+  AUH:"Abu Dhabi International" 
+};
+const airportCoords = { 
+  NBO:[1.2921,36.8219], 
+  DXB:[25.2532,55.3657], 
+  DOH:[25.2736,51.6080], 
+  AUH:[24.4333,54.6510] 
+};
 
+// Map setup
 let map = L.map('map').setView(airportCoords[selectedAirport], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
+// Switch tabs
 function setAirport(code, el){
   selectedAirport = code;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -123,6 +143,7 @@ function setAirport(code, el){
   loadFlights();
 }
 
+// Countdown
 function getCountdown(depTime){
   const diff = new Date(depTime) - new Date();
   if(diff<=0) return "Departed";
@@ -131,29 +152,35 @@ function getCountdown(depTime){
   return `${hrs}h ${mins}m`;
 }
 
+// Load flights from static JSON
 async function loadFlights(){
   const result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
   flights = [];
 
   try{
-    // 1️⃣ Scraper for published times
-    const scrapeRes = await fetch(`${backendURL}/flights/${selectedAirport}`);
-    const scrapeData = await scrapeRes.json();
+    let res = await fetch("./data/flights.json");
+    let data = await res.json();
+    if(!data.data || data.data.length === 0){ result.innerHTML="⚠️ No flights available."; return; }
 
-    // 2️⃣ AviationStack status
-    const aviRes = await fetch(`https://api.aviationstack.com/v1/flights?access_key=${aviationKey}&dep_iata=${selectedAirport}`);
-    const aviData = await aviRes.json();
+    flights = data.data.map(f=>{
+      const depRaw = f.departure?.estimated || f.departure?.scheduled;
+      const arrRaw = f.arrival?.estimated || f.arrival?.scheduled;
 
-    flights = scrapeData.flights.map(f=>{
-      const aviFlight = aviData.data.find(a=>a.flight?.iata===f.callsign);
-      const status = aviFlight?.flight_status?.toUpperCase() || "SCHEDULED";
-      const color = status.toLowerCase().includes("cancel")?"red":
-                    status.toLowerCase().includes("delay")?"orange":"green";
-
-      const countdown = f.depTime ? getCountdown(f.depTime) : "N/A";
-
-      return {...f, status, color, countdown, from:selectedAirport, lat:airportCoords[selectedAirport][0], lon:airportCoords[selectedAirport][1]};
+      return {
+        callsign: f.flight?.iata || "N/A",
+        from: selectedAirport,
+        to: f.arrival?.iata || "Unknown",
+        status: f.flight_status?.toUpperCase() || "SCHEDULED",
+        color: f.flight_status?.toLowerCase().includes("cancel")?"red":
+               f.flight_status?.toLowerCase().includes("delay")?"orange":"green",
+        depTime: depRaw ? new Date(depRaw).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', timeZone:f.departure.timezone||"UTC" }) : "N/A",
+        arrTime: arrRaw ? new Date(arrRaw).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', timeZone:f.arrival.timezone||"UTC" }) : "N/A",
+        date: depRaw ? new Date(depRaw).toLocaleDateString([], { timeZone:f.departure.timezone||"UTC" }) : "N/A",
+        countdown: depRaw ? getCountdown(depRaw) : "N/A",
+        lat: airportCoords[selectedAirport][0],
+        lon: airportCoords[selectedAirport][1]
+      };
     });
 
   }catch(err){
@@ -165,12 +192,15 @@ async function loadFlights(){
   displayFlights(flights);
 }
 
+// Display flights
 function displayFlights(data){
   const result = document.getElementById("result");
   if(!data||data.length===0){ result.innerHTML="⚠️ No flights available."; return; }
+
   result.innerHTML=`<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
   const grid = result.querySelector(".grid");
-  map.eachLayer(layer=>{if(layer instanceof L.Marker) map.removeLayer(layer);});
+
+  map.eachLayer(layer=>{ if(layer instanceof L.Marker) map.removeLayer(layer); });
 
   data.forEach((f,index)=>{
     let card = document.createElement("div");
@@ -180,26 +210,29 @@ function displayFlights(data){
       <p><b>Route:</b> ${airportNames[f.from]} → ${f.to}</p>
       <p><b>Status:</b> <span style="color:${f.color}; font-weight:bold;">${f.status}</span></p>
       <div class="details" id="details-${index}">
-        <p>📅 ${f.depTime ? new Date(f.depTime).toLocaleDateString() : "N/A"}</p>
+        <p>📅 ${f.date}</p>
         <p>🕒 ${f.depTime} → ${f.arrTime}</p>
         <p>⏳ Departs in: ${f.countdown}</p>
       </div>
     `;
-    card.onclick=()=>document.getElementById(`details-${index}`).classList.toggle("show");
+    card.onclick = ()=>document.getElementById(`details-${index}`).classList.toggle("show");
     grid.appendChild(card);
+
     L.marker([f.lat,f.lon]).addTo(map)
       .bindPopup(`✈ ${f.callsign}<br>${airportNames[f.from]} → ${f.to}<br>${f.depTime} → ${f.arrTime}<br>⏳ ${f.countdown}`);
   });
 }
 
-document.getElementById("searchInput").addEventListener("input",function(){
-  let query=this.value.trim().toUpperCase();
-  if(!query) return displayFlights(flights);
-  let filtered = flights.filter(f=> f.callsign.includes(query) || f.to.toUpperCase().includes(query));
+// Search
+document.getElementById("searchInput").addEventListener("input", function(){
+  let q=this.value.trim().toUpperCase();
+  if(!q) return displayFlights(flights);
+  let filtered = flights.filter(f=> f.callsign.includes(q) || f.to.toUpperCase().includes(q));
   displayFlights(filtered);
 });
 
-window.onload=loadFlights;
+// Load flights on page load
+window.onload = loadFlights;
 </script>
 
 <footer style="text-align:center; padding:15px; font-size:14px; color:#aaa;">
