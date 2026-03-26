@@ -23,7 +23,9 @@ const airportCoords = {
   NBO: [1.2921, 36.8219],
   DXB: [25.2532, 55.3657],
   DOH: [25.2736, 51.6080],
-  AUH: [24.4333, 54.6510]
+  AUH: [24.4333, 54.6510],
+  IST: [41.262, 28.742],
+  FRA: [50.0379, 8.5622]
 };
 
 // 🔁 Switch Tabs
@@ -50,83 +52,53 @@ function getCountdown(time) {
   return hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`;
 }
 
-// ✈️ LOAD FLIGHTS (UPDATED TO USE GITHUB BACKEND)
+// ✈️ Load Flights from JSON
 async function loadFlights() {
   const result = document.getElementById("result");
   result.innerHTML = "Loading flight board...";
   flights = [];
 
   try {
-    let res = await fetch("data/flights.json");
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch flight data");
-    }
-
+    // fetch from GitHub Pages relative path
+    let res = await fetch("./data/flights.json");
     let data = await res.json();
 
-    if (!data || !data.data || data.data.length === 0) {
+    if (!data.data || data.data.length === 0) {
       result.innerHTML = "⚠️ No flights available.";
       return;
     }
 
-    // Filter flights by selected airport
-    const filteredFlights = data.data.filter(f =>
-      f.departure?.iata === selectedAirport
-    );
-
-    if (filteredFlights.length === 0) {
-      result.innerHTML = "⚠️ No flights found for this airport.";
-      return;
-    }
-
-    flights = filteredFlights.map(f => {
-
-      const depRaw = f.departure?.estimated || f.departure?.scheduled;
-      const arrRaw = f.arrival?.estimated || f.arrival?.scheduled;
-
-      const depTimeFormatted = depRaw
-        ? new Date(depRaw).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : "N/A";
-
-      const arrTimeFormatted = arrRaw
-        ? new Date(arrRaw).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : "N/A";
-
-      const statusRaw = f.flight_status || "scheduled";
-
-      const status = statusRaw.toUpperCase();
-
-      const color =
-        statusRaw.includes("cancel") ? "red" :
-        statusRaw.includes("delay") ? "orange" :
-        statusRaw.includes("active") ? "green" :
-        "green";
+    flights = data.data.map(f => {
+      const depTimeRaw = f.departure?.estimated || f.departure?.scheduled;
+      const arrTimeRaw = f.arrival?.estimated || f.arrival?.scheduled;
 
       return {
         callsign: f.flight?.iata || "N/A",
         from: selectedAirport,
         to: f.arrival?.iata || "Unknown",
 
-        status: status,
-        color: color,
+        status: f.flight_status?.toUpperCase() || "SCHEDULED",
 
-        depTime: depTimeFormatted,
-        arrTime: arrTimeFormatted,
+        color:
+          f.flight_status?.includes("cancel") ? "red" :
+          f.flight_status?.includes("delay") ? "orange" :
+          f.flight_status?.includes("active") ? "green" : "green",
 
-        date: depRaw
-          ? new Date(depRaw).toLocaleDateString()
-          : "N/A",
+        depTime: depTimeRaw ? new Date(depTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.departure.timezone || "UTC" }) : "N/A",
 
-        countdown: depRaw ? getCountdown(depRaw) : "N/A",
+        arrTime: arrTimeRaw ? new Date(arrTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.arrival.timezone || "UTC" }) : "N/A",
+
+        date: depTimeRaw ? new Date(depTimeRaw).toLocaleDateString([], { timeZone: f.departure.timezone || "UTC" }) : "N/A",
+
+        countdown: depTimeRaw ? getCountdown(depTimeRaw) : "N/A",
 
         lat: airportCoords[selectedAirport][0],
         lon: airportCoords[selectedAirport][1]
       };
     });
 
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     result.innerHTML = "❌ Error loading flights.";
     return;
   }
@@ -152,7 +124,6 @@ function displayFlights(data) {
   });
 
   data.forEach((f, index) => {
-
     let card = document.createElement("div");
     card.className = `card status-${f.color}`;
 
@@ -203,5 +174,5 @@ document.getElementById("searchInput").addEventListener("input", function () {
   displayFlights(filtered);
 });
 
-// 🚀 LOAD
+// 🚀 LOAD on window load
 window.onload = loadFlights;
