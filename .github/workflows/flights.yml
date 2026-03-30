@@ -2,7 +2,7 @@ name: Update Flights Data
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
+    - cron: "0 */6 * * *"   # every 6 hours (SAFE)
   workflow_dispatch:
 
 jobs:
@@ -13,9 +13,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Fetch flight data
+      - name: Fetch flight data safely
         run: |
-          curl "http://api.aviationstack.com/v1/flights?access_key=22874e1a15c5530668869c9c44b7f337&dep_iata=NBO" > data/flights.json
+          response=$(curl -s "http://api.aviationstack.com/v1/flights?access_key=22874e1a15c5530668869c9c44b7f337&dep_iata=NBO")
+
+          # Prevent overwriting with error
+          if echo "$response" | grep -q '"error"'; then
+            echo "API limit reached. Skipping update."
+          else
+            echo "$response" > data/flights.json
+          fi
 
       - name: Commit updated data
         run: |
