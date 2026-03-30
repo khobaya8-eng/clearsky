@@ -1,157 +1,137 @@
 let selectedAirport = "NBO";
 let flights = [];
 
-// 🌍 Airport full names
+// Airports
 const airportNames = {
-  NBO: "Nairobi (JKIA)",
-  DXB: "Dubai International",
-  DOH: "Doha Hamad",
-  AUH: "Abu Dhabi International",
-  IST: "Istanbul Airport",
-  FRA: "Frankfurt Airport"
+  NBO:"Nairobi (JKIA)",
+  DXB:"Dubai",
+  DOH:"Doha",
+  AUH:"Abu Dhabi",
+  IST:"Istanbul",
+  FRA:"Frankfurt",
+  AMS:"Amsterdam",
+  CDG:"Paris",
+  LHR:"London",
+  JNB:"Johannesburg"
 };
 
-// 🌍 Map Setup
-let map = L.map('map').setView([1.2921, 36.8219], 5);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-// Airport coordinates
 const airportCoords = {
-  NBO: [1.2921, 36.8219],
-  DXB: [25.2532, 55.3657],
-  DOH: [25.2736, 51.6080],
-  AUH: [24.4333, 54.6510],
-  IST: [41.262, 28.742],
-  FRA: [50.0379, 8.5622]
+  NBO:[-1.3192,36.9278],
+  DXB:[25.2532,55.3657],
+  DOH:[25.2736,51.6080],
+  AUH:[24.4333,54.6510],
+  IST:[41.262,28.742],
+  FRA:[50.0379,8.5622],
+  AMS:[52.3105,4.7683],
+  CDG:[49.0097,2.5479],
+  LHR:[51.47,-0.45],
+  JNB:[-26.1337,28.2420]
 };
 
-// 🔁 Switch Tabs
-function setAirport(code, el) {
+// Map
+let map = L.map('map').setView(airportCoords[selectedAirport], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Switch airport
+function setAirport(code, el){
   selectedAirport = code;
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   el.classList.add("active");
-  map.setView(airportCoords[code], 5);
+  map.setView(airportCoords[code],5);
   loadFlights();
 }
 
-// ⏳ Countdown function
-function getCountdown(time) {
-  const now = new Date();
-  const diff = new Date(time) - now;
-  if (diff <= 0) return "Departed";
-  const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(mins / 60);
-  return hrs > 0 ? `${hrs}h ${mins % 60}m` : `${mins}m`;
+// Countdown
+function getCountdown(time){
+  const diff = new Date(time) - new Date();
+  if(diff<=0) return "Departed";
+  const mins = Math.floor(diff/60000);
+  const hrs = Math.floor(mins/60);
+  return hrs>0 ? `${hrs}h ${mins%60}m` : `${mins}m`;
 }
 
-// ✈️ Load Flights from JSON
-async function loadFlights() {
+// Load flights
+async function loadFlights(){
   const result = document.getElementById("result");
-  result.innerHTML = "Loading flight board...";
+  result.innerHTML = "Loading...";
   flights = [];
 
-  try {
+  try{
     let res = await fetch("./data/flights.json");
     let data = await res.json();
 
-    if (!data.data || data.data.length === 0) {
-      result.innerHTML = "⚠️ No flights available.";
+    if(data.error){
+      result.innerHTML="⚠️ API limit reached. Try later.";
       return;
     }
 
-    flights = data.data.map(f => {
-      const depTimeRaw = f.departure?.estimated || f.departure?.scheduled;
-      const arrTimeRaw = f.arrival?.estimated || f.arrival?.scheduled;
+    flights = data.data.map(f=>{
+      const dest = f.arrival?.iata || "Unknown";
+      const coords = airportCoords[dest] || airportCoords[selectedAirport];
 
       return {
         callsign: f.flight?.iata || "N/A",
-        from: selectedAirport,
-        to: f.arrival?.iata || "Unknown",
-        status: f.flight_status?.toUpperCase() || "SCHEDULED",
-        color:
-          f.flight_status?.includes("cancel") ? "red" :
-          f.flight_status?.includes("delay") ? "orange" :
-          f.flight_status?.includes("active") ? "green" : "green",
-        depTime: depTimeRaw ? new Date(depTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.departure.timezone || "UTC" }) : "N/A",
-        arrTime: arrTimeRaw ? new Date(arrTimeRaw).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: f.arrival.timezone || "UTC" }) : "N/A",
-        date: depTimeRaw ? new Date(depTimeRaw).toLocaleDateString([], { timeZone: f.departure.timezone || "UTC" }) : "N/A",
-        countdown: depTimeRaw ? getCountdown(depTimeRaw) : "N/A",
-        lat: airportCoords[selectedAirport][0],
-        lon: airportCoords[selectedAirport][1]
+        airline: f.airline?.name || "Unknown Airline",
+        to: dest,
+        status: f.flight_status || "scheduled",
+        dep: f.departure?.scheduled,
+        arr: f.arrival?.scheduled,
+        lat: coords[0],
+        lon: coords[1]
       };
     });
 
-  } catch (err) {
-    console.error(err);
-    result.innerHTML = "❌ Error loading flights.";
+  }catch(err){
+    result.innerHTML="❌ Error loading flights.";
     return;
   }
 
   displayFlights(flights);
 }
 
-// 📊 Display Flights
-function displayFlights(data) {
+// Display
+function displayFlights(data){
   const result = document.getElementById("result");
-
-  if (!data || data.length === 0) {
-    result.innerHTML = "⚠️ No flights available.";
-    return;
-  }
-
-  result.innerHTML = `<h3>🛫 Flights from ${airportNames[selectedAirport]}</h3><div class="grid"></div>`;
+  result.innerHTML=`<div class="grid"></div>`;
   const grid = result.querySelector(".grid");
 
-  // Clear previous markers
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) map.removeLayer(layer);
+  map.eachLayer(layer=>{
+    if(layer instanceof L.Marker || layer instanceof L.Polyline) map.removeLayer(layer);
   });
 
-  data.forEach((f, index) => {
-    let card = document.createElement("div");
-    card.className = `card status-${f.color}`;
+  data.forEach((f,i)=>{
+    let card=document.createElement("div");
+    card.className="card";
 
-    card.innerHTML = `
+    card.innerHTML=`
       <h4>✈ ${f.callsign}</h4>
-      <p><b>Route:</b> ${airportNames[f.from]} → ${airportNames[f.to] || f.to}</p>
-      <p><b>Status:</b> <span style="color:${f.color}; font-weight:bold;">${f.status}</span></p>
-      <div class="details" id="details-${index}">
-        <p>📅 ${f.date}</p>
-        <p>🕒 ${f.depTime} → ${f.arrTime}</p>
-        <p>⏳ Departs in: ${f.countdown}</p>
+      <p>${f.airline}</p>
+      <p>${airportNames[selectedAirport]} → ${airportNames[f.to]||f.to}</p>
+      <div class="details" id="d${i}">
+        <p>Status: ${f.status}</p>
+        <p>Departure: ${f.dep || "N/A"}</p>
       </div>
     `;
 
-    card.onclick = () => {
-      document.getElementById(`details-${index}`).classList.toggle("show");
-    };
+    card.onclick=()=>document.getElementById(`d${i}`).classList.toggle("show");
 
     grid.appendChild(card);
 
-    L.marker([f.lat, f.lon]).addTo(map)
-      .bindPopup(`
-        ✈ ${f.callsign}<br>
-        ${airportNames[f.from]} → ${airportNames[f.to] || f.to}<br>
-        ${f.depTime} → ${f.arrTime}<br>
-        ⏳ ${f.countdown}
-      `);
+    let from = airportCoords[selectedAirport];
+
+    // Marker
+    L.marker([f.lat,f.lon]).addTo(map);
+
+    // ✈️ ROUTE LINE
+    L.polyline([from,[f.lat,f.lon]]).addTo(map);
   });
 }
 
-// 🔍 SEARCH
-document.getElementById("searchInput").addEventListener("input", function () {
-  let query = this.value.trim().toUpperCase();
-  if (!query) return displayFlights(flights);
-
-  let filtered = flights.filter(f =>
-    f.callsign.includes(query) || f.to.includes(query)
-  );
-
-  displayFlights(filtered);
+// Search
+document.getElementById("searchInput").addEventListener("input",function(){
+  let q=this.value.toUpperCase();
+  displayFlights(flights.filter(f=>f.callsign.includes(q)||f.to.includes(q)));
 });
 
-// 🚀 LOAD flights on window load
-window.onload = loadFlights;
+window.onload=loadFlights;
