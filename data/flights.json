@@ -3,12 +3,12 @@
     "route": "NBO - DXB",
     "date": "2026-04-01",
     "time": "10:00",
-    "status": "On Time"
+    "status": "scheduled"
   },
   {
     "route": "NBO - IST",
     "date": "2026-04-02",
     "time": "14:30",
-    "status": "Delayed"
+    "status": "active"
   }
 ]
