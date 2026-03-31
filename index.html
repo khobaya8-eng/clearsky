@@ -6,14 +6,12 @@
 <title>ClearSky Flight Monitor</title>
 
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-<header>✈️ ClearSky</header>
+<header>✈️ ClearSky Flight Monitor</header>
 
 <div class="tabs">
   <div class="tab active" onclick="setAirport('NBO', this)">Nairobi</div>
@@ -25,15 +23,11 @@
 </div>
 
 <div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search flight or destination">
+  <input type="text" id="searchInput" placeholder="Search flight route or flight number">
 </div>
 
 <div id="result">Loading flights...</div>
 
-<h3 style="text-align:center;">🗺 Flight Map</h3>
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="app.js"></script>
 
 </body>
