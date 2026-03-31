@@ -13,17 +13,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Install jq
+        run: sudo apt-get install jq
+
       - name: Fetch and transform flights
         run: |
           response=$(curl -s "http://api.aviationstack.com/v1/flights?access_key=22874e1a15c5530668869c9c44b7f337&dep_iata=NBO")
 
-          # Stop if API error
           if echo "$response" | grep -q '"error"'; then
-            echo "API limit reached. Skipping update."
+            echo "API error, skipping..."
             exit 0
           fi
 
-          # Transform API → clean JSON
           echo "$response" | jq '[
             .data[] | {
               route: (.departure.iata + " - " + .arrival.iata),
@@ -33,7 +34,7 @@ jobs:
             }
           ]' > data/flights.json
 
-      - name: Commit updated data
+      - name: Commit changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
