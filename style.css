@@ -27,11 +27,12 @@ header {
   background: #1a2a4c;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
 }
 
-.tab.active {
-  background: #003366;
-}
+.tab:hover { background: #002b5c; }
+.tab.active { background: #003366; }
 
 .search-box {
   text-align: center;
@@ -43,43 +44,30 @@ header {
   width: 250px;
   border-radius: 6px;
   border: none;
+  font-size: 16px;
 }
 
-.grid {
+#result {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  margin: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 15px;
+  margin: 20px;
 }
 
 .card {
   background: #0f203f;
   padding: 15px;
   border-radius: 10px;
-  cursor: pointer;
   border-left: 5px solid #00ff88;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
 }
 
-.status-orange { border-left-color: orange; }
-.status-red { border-left-color: red; }
+.card:hover { transform: translateY(-5px); }
 
-.details {
-  display: none;
-}
+.status-scheduled { border-left-color: #00ff88; }
+.status-active { border-left-color: #ffa500; }
+.status-delayed { border-left-color: #ff3d3d; }
+.status-landed { border-left-color: #00aaff; }
 
-.details.show {
-  display: block;
-}
-
-#map {
-  height: 450px;
-  width: 90%;
-  margin: 20px auto;
-  border-radius: 10px;
-}
-#result {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
-  margin: 20px;
-}
+.flight-info { font-size: 16px; margin: 5px 0; }
