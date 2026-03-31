@@ -5,11 +5,19 @@ async function loadFlights() {
         const response = await fetch('./data/flights.json');
         const flights = await response.json();
 
-        allFlights = flights;
+        console.log("Loaded:", flights);
 
+        if (!Array.isArray(flights)) {
+            throw new Error("Flights data is not an array");
+        }
+
+        allFlights = flights;
         displayFlights(flights);
+
     } catch (error) {
         console.error('Error loading flights:', error);
+        document.getElementById('result').innerHTML =
+            "<p style='color:red;'>Failed to load flights</p>";
     }
 }
 
@@ -17,14 +25,14 @@ function displayFlights(flights) {
     const container = document.getElementById('result');
     container.innerHTML = '';
 
-    if (!flights || flights.length === 0) {
+    if (flights.length === 0) {
         container.innerHTML = "<p>No flights available</p>";
         return;
     }
 
     flights.forEach(flight => {
         const div = document.createElement('div');
-        div.className = 'flight-card';
+        div.className = 'card';
 
         div.innerHTML = `
             <h3>${flight.route}</h3>
@@ -44,17 +52,15 @@ function setAirport(code, element) {
     displayFlights(filtered);
 }
 
-// search
-document.addEventListener('input', function(e) {
-    if (e.target.id === 'searchInput') {
-        const value = e.target.value.toLowerCase();
+// SEARCH
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const value = e.target.value.toLowerCase();
 
-        const filtered = allFlights.filter(f =>
-            f.route.toLowerCase().includes(value)
-        );
+    const filtered = allFlights.filter(f =>
+        f.route.toLowerCase().includes(value)
+    );
 
-        displayFlights(filtered);
-    }
+    displayFlights(filtered);
 });
 
 loadFlights();
