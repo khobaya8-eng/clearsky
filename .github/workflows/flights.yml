@@ -18,7 +18,7 @@ jobs:
 
       - name: Fetch and transform flights
         run: |
-          response=$(curl -s "http://api.aviationstack.com/v1/flights?access_key=22874e1a15c5530668869c9c44b7f337&dep_iata=NBO")
+          response=$(curl -s "http://api.aviationstack.com/v1/flights?access_key=YOUR_API_KEY&dep_iata=NBO")
 
           if echo "$response" | grep -q '"error"'; then
             echo "API error, skipping..."
