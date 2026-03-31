@@ -2,7 +2,7 @@ name: Update Flights Data
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # every 6 hours (SAFE)
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 jobs:
@@ -13,16 +13,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Fetch flight data safely
+      - name: Fetch and transform flights
         run: |
           response=$(curl -s "http://api.aviationstack.com/v1/flights?access_key=22874e1a15c5530668869c9c44b7f337&dep_iata=NBO")
 
-          # Prevent overwriting with error
+          # Stop if API error
           if echo "$response" | grep -q '"error"'; then
             echo "API limit reached. Skipping update."
-          else
-            echo "$response" > data/flights.json
+            exit 0
           fi
+
+          # Transform API → clean JSON
+          echo "$response" | jq '[
+            .data[] | {
+              route: (.departure.iata + " - " + .arrival.iata),
+              date: (.departure.scheduled | split("T")[0]),
+              time: (.departure.scheduled | split("T")[1][0:5]),
+              status: .flight_status
+            }
+          ]' > data/flights.json
 
       - name: Commit updated data
         run: |
